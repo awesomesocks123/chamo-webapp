@@ -2,26 +2,20 @@
 
 import { useContext, useState } from 'react';
 import { FiArrowLeft } from 'react-icons/fi';
-import { AuthContext } from './context/AuthProvider';
+import { AuthContext } from '../../context/AuthProvider';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 // Import the login background image
-import loginBg from './assets/login-bg.png';
+import loginBg from '../../assets/login-bg.png';
 // Import Firebase authentication
-import { signInWithGoogle } from './lib/firebase';
+import { signInWithGoogle } from '../../lib/firebase';
 
-export default function Home() {
+export default function LoginPage() {
     const { authUser, setAuthUser } = useContext(AuthContext);
     const [errorMessage, setErrorMessage] = useState("");
     const [isLoading, setIsLoading] = useState(false);
     const router = useRouter();
-
-    // If user is already logged in, redirect to chat
-    if (authUser) {
-        router.push('/chat');
-        return null;
-    }
 
     const handleGoogleSignIn = async () => {
         try {

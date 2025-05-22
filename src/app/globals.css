@@ -1,15 +1,24 @@
 @import "tailwindcss";
-
 :root {
+  /* Theme colors */
+  --nav-black: #191919;
+  --dark-grey: #313131;
+  --light-grey: #474747;
+  --lighter-green: #f7fee7;
+  --light-green: #E1EACD;
+  --med-green: #BED292;
+  --dark-green: #466060;
+  --off-white: #eaeaea;
+  
+  /* Base colors */
   --background: #ffffff;
   --foreground: #171717;
 }
 
-@theme inline {
+/* Define theme variables */
+:root {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -24,3 +33,31 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* Utility classes for the theme colors */
+.bg-nav-black { background-color: var(--nav-black); }
+.bg-dark-grey { background-color: var(--dark-grey); }
+.bg-light-grey { background-color: var(--light-grey); }
+.bg-lighter-green { background-color: var(--lighter-green); }
+.bg-light-green { background-color: var(--light-green); }
+.bg-med-green { background-color: var(--med-green); }
+.bg-dark-green { background-color: var(--dark-green); }
+.bg-off-white { background-color: var(--off-white); }
+
+.text-nav-black { color: var(--nav-black); }
+.text-dark-grey { color: var(--dark-grey); }
+.text-light-grey { color: var(--light-grey); }
+.text-lighter-green { color: var(--lighter-green); }
+.text-light-green { color: var(--light-green); }
+.text-med-green { color: var(--med-green); }
+.text-dark-green { color: var(--dark-green); }
+.text-off-white { color: var(--off-white); }
+
+.border-nav-black { border-color: var(--nav-black); }
+.border-dark-grey { border-color: var(--dark-grey); }
+.border-light-grey { border-color: var(--light-grey); }
+.border-lighter-green { border-color: var(--lighter-green); }
+.border-light-green { border-color: var(--light-green); }
+.border-med-green { border-color: var(--med-green); }
+.border-dark-green { border-color: var(--dark-green); }
+.border-off-white { border-color: var(--off-white); }
