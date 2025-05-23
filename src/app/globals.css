@@ -27,6 +27,36 @@ body {
   color: var(--foreground);
 }
 
+/* Custom styling for nav buttons */
+.nav-button {
+  background-color: #BED292 !important;
+  color: #313131 !important;
+}
+
+.nav-button:hover {
+  background-color: #466060 !important;
+  color: white !important;
+}
+
+/* Dark mode overrides for nav buttons */
+.dark .nav-button {
+  background-color: #313131 !important;
+  color: #BED292 !important;
+}
+
+.dark .nav-button:hover {
+  background-color: #474747 !important;
+}
+
+/* Hamburger menu styling */
+.hamburger-icon {
+  color: white !important;
+}
+
+.dark .hamburger-icon {
+  color: #313131 !important;
+}
+
 /* Utility classes for the theme colors */
 .bg-nav-black { background-color: var(--nav-black); }
 .bg-dark-grey { background-color: var(--dark-grey); }

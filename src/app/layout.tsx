@@ -26,7 +26,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        {/* Add simple script to detect and apply dark mode */}
+        {/* Add simple script to detect and apply dark mode based on system preference only */}
         <script dangerouslySetInnerHTML={{
           __html: `
             // On page load or when changing themes, best to add inline in 'head' to avoid FOUC
@@ -35,6 +35,15 @@ export default function RootLayout({
             } else {
               document.documentElement.classList.remove('dark')
             }
+
+            // Listen for changes in system color scheme
+            window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+              if (e.matches) {
+                document.documentElement.classList.add('dark')
+              } else {
+                document.documentElement.classList.remove('dark')
+              }
+            })
           `
         }} />
       </head>

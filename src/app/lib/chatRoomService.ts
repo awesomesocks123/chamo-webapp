@@ -20,7 +20,7 @@ export interface ChatRoom {
   id?: string;
   title: string;
   description: string;
-  imageUrl: string;
+  imageUrl?: string;
   createdAt: any;
   activeUsers: number;
   category?: string;

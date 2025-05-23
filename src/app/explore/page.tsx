@@ -7,7 +7,6 @@ import NavBar from '../components/NavBar';
 import { IoPerson } from 'react-icons/io5';
 import { IoSearch, IoCloseCircleOutline } from 'react-icons/io5';
 import { FaArrowUp, FaArrowDown, FaPlus } from 'react-icons/fa';
-import Image from 'next/image';
 import SettingsModal from '../components/SettingsModal';
 import UserProfileModal from '../components/UserProfileModal';
 import NotificationsPanel from '../components/NotificationsPanel';
@@ -18,31 +17,26 @@ const defaultChatRooms: Omit<ChatRoom, 'id' | 'createdAt' | 'activeUsers'>[] = [
   {
     title: 'Anime',
     description: 'Discuss your favorite anime series and characters',
-    imageUrl: 'https://via.placeholder.com/300x200/FF5733/FFFFFF?text=Anime',
     category: 'Entertainment'
   },
   {
     title: 'Gaming',
     description: 'Connect with fellow gamers and discuss the latest games',
-    imageUrl: 'https://via.placeholder.com/300x200/33FF57/000000?text=Gaming',
     category: 'Entertainment'
   },
   {
     title: 'Art',
     description: 'Share your artwork and get inspired by others',
-    imageUrl: 'https://via.placeholder.com/300x200/5733FF/FFFFFF?text=Art',
     category: 'Creative'
   },
   {
     title: 'Coding',
     description: 'Discuss programming languages, projects, and coding challenges',
-    imageUrl: 'https://via.placeholder.com/300x200/3357FF/FFFFFF?text=Coding',
     category: 'Technology'
   },
   {
     title: 'Photography',
     description: 'Share photography tips, techniques, and your best shots',
-    imageUrl: 'https://via.placeholder.com/300x200/FF33A6/FFFFFF?text=Photography',
     category: 'Creative'
   }
 ];
@@ -57,7 +51,7 @@ export default function ExplorePage() {
   const [toggleTopicPage, setTopicPage] = useState(false);
   const [topicTitle, setTopicTitle] = useState('');
   const [topicDescription, setTopicDescription] = useState('');
-  const [selectedImage, setSelectedImage] = useState<File | null>(null);
+
   const [sorted, setSorted] = useState({ sorted: "title", reversed: false });
   
   // For NavBar functionality
@@ -182,7 +176,7 @@ export default function ExplorePage() {
     return (
       <button 
         onClick={() => setTopicPage(!toggleTopicPage)} 
-        className="bg-med-green text-dark-grey h-[45px] px-6 py-2 ml-4 rounded-md hover:bg-light-green transition-colors"
+        className="h-[45px] px-6 py-2 ml-4 rounded-md transition-colors hover:opacity-90 bg-med-green dark:bg-dark-green text-dark-grey dark:text-lighter-green"
       >
         Add Topic
       </button>
@@ -191,27 +185,23 @@ export default function ExplorePage() {
 
   const ExitBtn = () => {
     return (
-      <button onClick={() => setTopicPage(false)} className="text-dark-grey hover:text-black">
+      <button 
+        onClick={() => setTopicPage(false)} 
+        className="text-dark-grey dark:text-lighter-green hover:opacity-80"
+      >
         <IoCloseCircleOutline size={42} />
       </button>
     );
   };
 
-  const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (event.target.files && event.target.files[0]) {
-      setSelectedImage(event.target.files[0]);
-    }
-  };
+
 
   const CreateTopic = async () => {
     try {
       // Create a new chat room in Firestore
-      const imageUrl = selectedImage ? URL.createObjectURL(selectedImage) : 'https://via.placeholder.com/300x200/33A6FF/FFFFFF?text=Custom+Topic';
-      
       const newRoom = {
         title: topicTitle,
         description: topicDescription,
-        imageUrl: imageUrl,
         category: 'User Created'
       };
       
@@ -220,7 +210,6 @@ export default function ExplorePage() {
       // Reset form
       setTopicTitle('');
       setTopicDescription('');
-      setSelectedImage(null);
       setTopicPage(false);
       
       // Note: We don't need to update the topics state manually
@@ -231,23 +220,7 @@ export default function ExplorePage() {
     }
   };
 
-  const UploadImageButton = () => {
-    return (
-      <label
-        htmlFor="image-upload"
-        className="flex flex-col items-center justify-center w-full h-full bg-gray-300 rounded-md cursor-pointer hover:bg-light-green"
-      >
-        <div className="text-6xl font-bold text-med-green">+</div>
-        <p className="text-2xl font-bold text-gray-700">[Insert image here]</p>
-        <input
-          id="image-upload"
-          type="file"
-          className="hidden"
-          onChange={handleImageChange}
-        />
-      </label>
-    );
-  };
+
 
   const TopicCard = ({ topic }: { topic: ChatRoom }) => {
     const router = useRouter();
@@ -258,27 +231,18 @@ export default function ExplorePage() {
     };
     
     return (
-      <div className="bg-white rounded-lg shadow-md overflow-hidden">
-        <div className="h-40 bg-gray-300 relative">
-          {topic.imageUrl && (
-            <div className="w-full h-full relative">
-              <Image 
-                src={topic.imageUrl} 
-                alt={topic.title} 
-                fill 
-                className="object-cover"
-              />
-            </div>
-          )}
+      <div className="rounded-lg shadow-md overflow-hidden bg-white dark:bg-zinc-700">
+        <div className="h-40 relative flex items-center justify-center bg-gray-300 dark:bg-zinc-600">
+          <h3 className="text-xl font-semibold text-gray-800 dark:text-lighter-green">{topic.title}</h3>
         </div>
         <div className="p-4">
-          <h3 className="text-xl font-semibold text-gray-800">{topic.title}</h3>
-          <p className="text-gray-600 text-sm mt-1">{topic.description}</p>
+          <h3 className="text-xl font-semibold text-gray-800 dark:text-gray-200">{topic.title}</h3>
+          <p className="text-sm mt-1 text-gray-600 dark:text-gray-300">{topic.description}</p>
           <div className="flex justify-between items-center mt-4">
-            <span className="text-sm text-gray-500">{topic.category}</span>
+            <span className="text-sm text-gray-500 dark:text-gray-400">{topic.category}</span>
             <button 
               onClick={handleJoinRoom}
-              className="bg-med-green text-white px-4 py-2 rounded-md hover:bg-dark-green transition-colors"
+              className="px-4 py-2 rounded-md transition-colors hover:opacity-90 bg-med-green dark:bg-dark-green text-dark-grey dark:text-lighter-green"
             >
               Join
             </button>
@@ -290,14 +254,14 @@ export default function ExplorePage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex justify-center items-center bg-light-green">
-        <p className="text-dark-green font-medium">Loading...</p>
+      <div className="min-h-screen flex justify-center items-center bg-light-green dark:bg-[#191919]">
+        <p className="font-medium text-dark-grey dark:text-lighter-green">Loading...</p>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col h-screen bg-[#191919]">
+    <div className="flex flex-col h-screen bg-light-green dark:!bg-[#191919]">
       {/* Header/Navbar */}
       <NavBar 
         onNavButtonClick={handleNavButtonClick}
@@ -320,7 +284,7 @@ export default function ExplorePage() {
         </div>
       )}
 
-      <div className="flex-1 bg-[#f7fee7] overflow-y-auto">
+      <div className="flex-1 overflow-y-auto bg-light-green dark:!bg-[#191919]">
         <div className="max-w-7xl mx-auto px-4 py-8">
           {/* Search and Add Topic */}
           <div className="flex items-center justify-between mb-6">
@@ -330,14 +294,14 @@ export default function ExplorePage() {
                 placeholder="Search topics..."
                 value={searchQuery}
                 onChange={(e) => handleSearch(e.target.value)}
-                className="w-full px-4 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-med-green"
+                className="w-full px-4 py-2 rounded-md border border-gray-300 dark:border-zinc-600 bg-white dark:bg-zinc-700 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-med-green"
               />
               <IoSearch className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
             </div>
             <div className="flex items-center">
               <button 
                 onClick={sortByName} 
-                className="flex items-center bg-gray-200 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-300 transition-colors mr-4"
+                className="flex items-center px-4 py-2 rounded-md transition-colors mr-4 bg-gray-200 dark:bg-zinc-700 text-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-zinc-600"
               >
                 Sort {sorted.sorted === "title" && renderArrow()}
               </button>
@@ -347,9 +311,9 @@ export default function ExplorePage() {
 
           {/* Create Topic Form */}
           {toggleTopicPage && (
-            <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+            <div className="rounded-lg shadow-md p-6 mb-6 bg-white dark:bg-zinc-700">
               <div className="flex justify-between items-center mb-4">
-                <h2 className="text-2xl font-bold text-gray-800">Create Topic</h2>
+                <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-200">Create Topic</h2>
                 <ExitBtn />
               </div>
               <div className="flex gap-6">
@@ -359,24 +323,22 @@ export default function ExplorePage() {
                     placeholder="Enter your topic! (Ex. Anime, Gaming, Music, etc)"
                     value={topicTitle}
                     onChange={(e) => setTopicTitle(e.target.value)}
-                    className="w-full bg-gray-100 text-gray-700 border border-gray-300 rounded-md py-2 px-4 mb-4 focus:outline-none focus:ring-2 focus:ring-med-green"
+                    className="w-full border rounded-md py-2 px-4 mb-4 focus:outline-none focus:ring-2 focus:ring-med-green bg-white dark:bg-zinc-800 text-gray-800 dark:text-gray-200 border-gray-300 dark:border-zinc-600"
                   />
                   <textarea
                     placeholder="Enter your topic description!"
                     value={topicDescription}
                     onChange={(e) => setTopicDescription(e.target.value)}
-                    className="w-full h-32 bg-gray-100 text-gray-700 border border-gray-300 rounded-md py-2 px-4 mb-4 focus:outline-none focus:ring-2 focus:ring-med-green resize-none"
+                    className="w-full h-32 border rounded-md py-2 px-4 mb-4 focus:outline-none focus:ring-2 focus:ring-med-green resize-none bg-white dark:bg-zinc-800 text-gray-800 dark:text-gray-200 border-gray-300 dark:border-zinc-600"
                   />
                   <button 
                     onClick={CreateTopic} 
-                    className="bg-med-green text-white font-medium py-2 px-6 rounded-md hover:bg-dark-green transition-colors"
+                    className="font-medium py-2 px-6 rounded-md transition-colors hover:opacity-90 bg-med-green dark:bg-dark-green text-dark-grey dark:text-lighter-green"
                   >
                     Submit
                   </button>
                 </div>
-                <div className="w-1/2 h-64">
-                  <UploadImageButton />
-                </div>
+
               </div>
             </div>
           )}

@@ -52,17 +52,20 @@ const NavBar: React.FC<NavBarProps> = ({ onNavButtonClick, onSignOut, onSearch }
   };
   
   return (
-    <header className="bg-[#313131] text-white p-4 flex justify-between items-center relative">
-      <Link href="/explore" className="text-2xl font-bold m-0 hover:opacity-80 transition-opacity">Chamo Chat</Link>
+    <header className="bg-[#313131] dark:!bg-[#E1EACD] text-white dark:!text-[#313131] p-4 flex justify-between items-center relative">
+      <Link href="/explore" className="text-2xl font-bold m-0 hover:opacity-80 transition-opacity text-[#BED292] dark:text-[#313131]">Chamo Chat</Link>
       
       {/* Mobile Hamburger Menu Button */}
       {isMobile && (
-        <button 
+        <button
+          className="lg:hidden"
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          className="text-white p-2 focus:outline-none"
-          aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'}
         >
-          {mobileMenuOpen ? <IoClose size={24} /> : <IoMenu size={24} />}
+          {mobileMenuOpen ? (
+            <IoClose size={24} className="hamburger-icon" />
+          ) : (
+            <IoMenu size={24} className="hamburger-icon" />
+          )}
         </button>
       )}
       
@@ -76,54 +79,78 @@ const NavBar: React.FC<NavBarProps> = ({ onNavButtonClick, onSignOut, onSearch }
                 placeholder="Search users..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="px-3 py-2 rounded-l bg-gray-700 text-white outline-none"
+                className="px-3 py-2 rounded-l bg-gray-700 dark:bg-white text-white dark:text-dark-grey outline-none border border-gray-600 dark:border-med-green"
                 autoFocus
               />
               <button 
                 type="button" 
                 onClick={() => setShowSearchInput(false)}
-                className="bg-gray-700 text-white px-2 py-2 rounded-r hover:bg-gray-600"
+                className="bg-gray-700 dark:bg-white text-white dark:text-dark-grey px-2 py-2 rounded-r hover:bg-gray-600 dark:hover:bg-gray-200 border border-gray-600 dark:border-med-green border-l-0"
               >
                 <IoClose size={20} />
               </button>
             </form>
           ) : (
             <>
-              <NavButton 
-                icon={<CiBellOn size={20} />} 
-                onClick={() => onNavButtonClick('notifications')} 
-                tooltip="Notifications"
-              />
-              <NavButton 
-                icon={<LuMessagesSquare size={20} />} 
-                onClick={() => onNavButtonClick('messages')} 
-                tooltip="Messages"
-              />
-              <NavButton 
-                icon={<FaCompass size={20} />} 
-                onClick={() => onNavButtonClick('explore')} 
-                tooltip="Explore"
-              />
-              <NavButton 
-                icon={<IoMdPerson size={20} />} 
-                onClick={() => onNavButtonClick('profile')} 
-                tooltip="Profile"
-              />
-              <NavButton 
-                icon={<BsGearWideConnected size={20} />} 
-                onClick={() => onNavButtonClick('settings')} 
-                tooltip="Settings"
-              />
-              <NavButton 
-                icon={<IoSearch size={20} />} 
-                onClick={handleSearchClick} 
-                tooltip="Search"
-              />
+              {/* Custom styled buttons instead of NavButton component */}
+              <div className="relative">
+                <button 
+                  className="nav-button w-10 h-10 rounded-2xl flex items-center justify-center bg-med-green text-white hover:bg-dark-green transition-colors"
+                  onClick={() => onNavButtonClick('notifications')}
+                >
+                  <CiBellOn size={20} />
+                </button>
+              </div>
+              
+              <div className="relative">
+                <button 
+                  className="nav-button w-10 h-10 rounded-2xl flex items-center justify-center bg-med-green text-white hover:bg-dark-green transition-colors"
+                  onClick={() => onNavButtonClick('messages')}
+                >
+                  <LuMessagesSquare size={20} />
+                </button>
+              </div>
+              
+              <div className="relative">
+                <button 
+                  className="nav-button w-10 h-10 rounded-2xl flex items-center justify-center bg-med-green text-white hover:bg-dark-green transition-colors"
+                  onClick={() => onNavButtonClick('explore')}
+                >
+                  <FaCompass size={20} />
+                </button>
+              </div>
+              
+              <div className="relative">
+                <button 
+                  className="nav-button w-10 h-10 rounded-2xl flex items-center justify-center bg-med-green text-white hover:bg-dark-green transition-colors"
+                  onClick={() => onNavButtonClick('profile')}
+                >
+                  <IoMdPerson size={20} />
+                </button>
+              </div>
+              
+              <div className="relative">
+                <button 
+                  className="nav-button w-10 h-10 rounded-2xl flex items-center justify-center bg-med-green text-white hover:bg-dark-green transition-colors"
+                  onClick={() => onNavButtonClick('settings')}
+                >
+                  <BsGearWideConnected size={20} />
+                </button>
+              </div>
+              
+              <div className="relative">
+                <button 
+                  className="nav-button w-10 h-10 rounded-2xl flex items-center justify-center bg-med-green text-white hover:bg-dark-green transition-colors"
+                  onClick={handleSearchClick}
+                >
+                  <IoSearch size={20} />
+                </button>
+              </div>
             </>
           )}
           <button
             onClick={onSignOut}
-            className="bg-med-green text-white px-3 py-2 rounded hover:bg-dark-green dark:hover:bg-light-green transition-colors"
+            className="nav-button bg-med-green text-white px-3 py-2 rounded-2xl hover:bg-dark-green transition-colors font-medium"
           >
             Sign Out
           </button>
@@ -132,14 +159,14 @@ const NavBar: React.FC<NavBarProps> = ({ onNavButtonClick, onSignOut, onSearch }
       
       {/* Mobile Navigation Menu */}
       {isMobile && mobileMenuOpen && (
-        <div className="absolute top-full left-0 right-0 bg-[#313131] z-50 shadow-lg">
+        <div className="absolute top-full left-0 right-0 bg-[#313131] dark:!bg-[#E1EACD] z-50 shadow-lg">
           <div className="flex flex-col p-4 space-y-4">
             <button 
               onClick={() => {
                 onNavButtonClick('notifications');
                 setMobileMenuOpen(false);
               }}
-              className="flex items-center text-white hover:text-light-green transition-colors"
+              className="flex items-center text-white dark:text-[#313131] hover:text-light-green dark:hover:text-[#474747] transition-colors"
             >
               <CiBellOn size={20} className="mr-3" /> Notifications
             </button>
@@ -148,7 +175,7 @@ const NavBar: React.FC<NavBarProps> = ({ onNavButtonClick, onSignOut, onSearch }
                 onNavButtonClick('messages');
                 setMobileMenuOpen(false);
               }}
-              className="flex items-center text-white hover:text-light-green transition-colors"
+              className="flex items-center text-white dark:text-[#313131] hover:text-light-green dark:hover:text-[#474747] transition-colors"
             >
               <LuMessagesSquare size={20} className="mr-3" /> Messages
             </button>
@@ -157,7 +184,7 @@ const NavBar: React.FC<NavBarProps> = ({ onNavButtonClick, onSignOut, onSearch }
                 onNavButtonClick('explore');
                 setMobileMenuOpen(false);
               }}
-              className="flex items-center text-white hover:text-light-green transition-colors"
+              className="flex items-center text-white dark:text-[#313131] hover:text-light-green dark:hover:text-[#474747] transition-colors"
             >
               <FaCompass size={20} className="mr-3" /> Explore
             </button>
@@ -166,7 +193,7 @@ const NavBar: React.FC<NavBarProps> = ({ onNavButtonClick, onSignOut, onSearch }
                 onNavButtonClick('profile');
                 setMobileMenuOpen(false);
               }}
-              className="flex items-center text-white hover:text-light-green transition-colors"
+              className="flex items-center text-white dark:text-[#313131] hover:text-light-green dark:hover:text-[#474747] transition-colors"
             >
               <IoMdPerson size={20} className="mr-3" /> Profile
             </button>
@@ -175,7 +202,7 @@ const NavBar: React.FC<NavBarProps> = ({ onNavButtonClick, onSignOut, onSearch }
                 onNavButtonClick('settings');
                 setMobileMenuOpen(false);
               }}
-              className="flex items-center text-white hover:text-light-green transition-colors"
+              className="flex items-center text-white dark:text-[#313131] hover:text-light-green dark:hover:text-[#474747] transition-colors"
             >
               <BsGearWideConnected size={20} className="mr-3" /> Settings
             </button>
@@ -184,7 +211,7 @@ const NavBar: React.FC<NavBarProps> = ({ onNavButtonClick, onSignOut, onSearch }
                 handleSearchClick();
                 setMobileMenuOpen(false);
               }}
-              className="flex items-center text-white hover:text-light-green transition-colors"
+              className="flex items-center text-white dark:text-[#313131] hover:text-light-green dark:hover:text-[#474747] transition-colors"
             >
               <IoSearch size={20} className="mr-3" /> Search
             </button>
@@ -193,7 +220,7 @@ const NavBar: React.FC<NavBarProps> = ({ onNavButtonClick, onSignOut, onSearch }
                 onSignOut();
                 setMobileMenuOpen(false);
               }}
-              className="bg-med-green text-white px-3 py-2 rounded hover:bg-dark-green dark:hover:bg-light-green transition-colors w-full text-center mt-4"
+              className="nav-button bg-med-green text-white px-3 py-2 rounded hover:bg-dark-green transition-colors w-full text-center mt-4 font-medium"
             >
               Sign Out
             </button>
