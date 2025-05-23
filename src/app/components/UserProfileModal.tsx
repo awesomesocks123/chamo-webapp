@@ -163,27 +163,27 @@ const UserProfileModal: React.FC<UserProfileModalProps> = ({ onClose }) => {
                 <IoCamera size={18} />
               </button>
             </div>
-            <h3 className="text-xl font-semibold text-dark-grey dark:text-white">{userProfile.username}</h3>
-            <p className="text-gray-500 dark:text-gray-400">{userProfile.email}</p>
+            <h3 className="text-xl font-semibold text-black dark:text-white">{userProfile.username}</h3>
+            <p className="text-gray-600 dark:text-white">{userProfile.email}</p>
           </div>
           
 
           <div className="flex-1 p-4">
             <div className="mb-6">
-              <h4 className="text-lg font-medium mb-2 text-dark-grey dark:text-white">Account Information</h4>
+              <h4 className="text-lg font-medium mb-2 text-black dark:text-white">Account Information</h4>
               <div className="bg-white dark:bg-zinc-700 rounded-lg p-4 shadow-sm">
                 <div className="mb-4">
-                  <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Username</p>
-                  <p className="font-medium text-dark-grey dark:text-white">{userProfile.username}</p>
+                  <p className="text-sm text-gray-600 dark:text-white mb-1">Username</p>
+                  <p className="font-medium text-black dark:text-white">{userProfile.username}</p>
                 </div>
                 <div className="mb-4">
-                  <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Email</p>
-                  <p className="font-medium text-dark-grey dark:text-white">{userProfile.email}</p>
+                  <p className="text-sm text-gray-600 dark:text-white mb-1">Email</p>
+                  <p className="font-medium text-black dark:text-white">{userProfile.email}</p>
                 </div>
                 {userProfile.createdAt && (
                   <div>
-                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Account Created</p>
-                    <p className="font-medium text-dark-grey dark:text-white">
+                    <p className="text-sm text-gray-600 dark:text-white mb-1">Account Created</p>
+                    <p className="font-medium text-black dark:text-white">
                       {typeof userProfile.createdAt === 'object' && 'seconds' in userProfile.createdAt
                         ? new Date((userProfile.createdAt as any).seconds * 1000).toLocaleDateString()
                         : new Date(userProfile.createdAt as any).toLocaleDateString()}
@@ -194,7 +194,7 @@ const UserProfileModal: React.FC<UserProfileModalProps> = ({ onClose }) => {
             </div>
 
             <div className="mb-6">
-              <h4 className="text-lg font-medium mb-2 text-dark-grey dark:text-white">Bio</h4>
+              <h4 className="text-lg font-medium mb-2 text-black dark:text-white">Bio</h4>
               <div className="bg-white dark:bg-zinc-700 rounded-lg p-4 shadow-sm">
                 {editMode ? (
                   <div>
@@ -224,7 +224,7 @@ const UserProfileModal: React.FC<UserProfileModalProps> = ({ onClose }) => {
                     </div>
                   </div>
                 ) : (
-                  <p className="text-gray-800 dark:text-gray-300">
+                  <p className="text-gray-600 dark:text-white">
                     {userProfile.bio || 'No bio provided yet.'}
                   </p>
                 )}
@@ -232,12 +232,12 @@ const UserProfileModal: React.FC<UserProfileModalProps> = ({ onClose }) => {
             </div>
 
             <div className="mb-6">
-              <h4 className="text-lg font-medium mb-2 text-dark-grey dark:text-white">Privacy Settings</h4>
+              <h4 className="text-lg font-medium mb-2 text-black dark:text-white">Privacy Settings</h4>
               <div className="bg-white dark:bg-zinc-700 rounded-lg p-4 shadow-sm">
                 <div className="flex items-center justify-between mb-4">
                   <div>
-                    <p className="font-medium text-dark-grey dark:text-white">Show Online Status</p>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">Allow others to see when you're online</p>
+                    <p className="font-medium text-black dark:text-white">Show Online Status</p>
+                    <p className="text-sm text-gray-600 dark:text-white">Allow others to see when you're online</p>
                   </div>
                   <div className="relative inline-block w-12 align-middle select-none">
                     <input 
@@ -258,8 +258,8 @@ const UserProfileModal: React.FC<UserProfileModalProps> = ({ onClose }) => {
                 </div>
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="font-medium text-dark-grey dark:text-white">Allow Friend Requests</p>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">Receive friend requests from other users</p>
+                    <p className="font-medium text-black dark:text-white">Allow Friend Requests</p>
+                    <p className="text-sm text-gray-600 dark:text-white">Receive friend requests from other users</p>
                   </div>
                   <div className="relative inline-block w-12 align-middle select-none">
                     <input 
@@ -285,7 +285,7 @@ const UserProfileModal: React.FC<UserProfileModalProps> = ({ onClose }) => {
         </>
       ) : (
         <div className="flex-1 flex items-center justify-center">
-          <p className="text-gray-500 dark:text-gray-400">User not found</p>
+          <p className="text-gray-600 dark:text-white">User not found</p>
         </div>
       )}
     </div>

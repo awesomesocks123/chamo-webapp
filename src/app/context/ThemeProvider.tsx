@@ -4,58 +4,55 @@ import React, { createContext, useState, useEffect, ReactNode } from 'react';
 
 type ThemeContextType = {
   isDarkMode: boolean;
-  toggleTheme: () => void;
 };
 
 export const ThemeContext = createContext<ThemeContextType>({
-  isDarkMode: false,
-  toggleTheme: () => {},
+  isDarkMode: false
 });
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  // Initialize state from the current class on the HTML element
-  const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
-    // This will run on the client side only
-    if (typeof document !== 'undefined') {
-      return document.documentElement.classList.contains('dark');
-    }
-    return false;
-  });
+  // Initialize state from system preference
+  const [isDarkMode, setIsDarkMode] = useState<boolean>(false);
   
-  // Make sure state is in sync with the actual DOM on mount
+  // Set up theme based on system preference only
   useEffect(() => {
     try {
-      const isDark = document.documentElement.classList.contains('dark');
-      setIsDarkMode(isDark);
+      // Use system preference
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      setIsDarkMode(prefersDark);
+      document.documentElement.classList.toggle('dark', prefersDark);
+      
+      // Listen for changes in system color scheme preference
+      const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+      const handleChange = (e: MediaQueryListEvent) => {
+        setIsDarkMode(e.matches);
+        document.documentElement.classList.toggle('dark', e.matches);
+      };
+      
+      // Add event listener with newer API if available, fallback to older API
+      if (mediaQuery.addEventListener) {
+        mediaQuery.addEventListener('change', handleChange);
+      } else {
+        // @ts-ignore - For older browsers
+        mediaQuery.addListener(handleChange);
+      }
+      
+      // Cleanup
+      return () => {
+        if (mediaQuery.removeEventListener) {
+          mediaQuery.removeEventListener('change', handleChange);
+        } else {
+          // @ts-ignore - For older browsers
+          mediaQuery.removeListener(handleChange);
+        }
+      };
     } catch (error) {
-      console.error('Error checking dark mode:', error);
+      console.error('Error setting up theme:', error);
     }
   }, []);
 
-  // Toggle theme function
-  const toggleTheme = () => {
-    try {
-      const newIsDarkMode = !isDarkMode;
-      
-      if (newIsDarkMode) {
-        document.documentElement.classList.add('dark');
-        localStorage.setItem('theme', 'dark');
-      } else {
-        document.documentElement.classList.remove('dark');
-        localStorage.setItem('theme', 'light');
-      }
-      
-      setIsDarkMode(newIsDarkMode);
-      
-      // Force a re-render of components that might depend on the theme
-      window.dispatchEvent(new Event('storage'));
-    } catch (error) {
-      console.error('Error updating theme:', error);
-    }
-  };
-
   return (
-    <ThemeContext.Provider value={{ isDarkMode, toggleTheme }}>
+    <ThemeContext.Provider value={{ isDarkMode }}>
       {children}
     </ThemeContext.Provider>
   );

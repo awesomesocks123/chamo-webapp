@@ -231,13 +231,13 @@ export default function ChatPage() {
       {/* Main content */}
       <div className="flex-1 flex overflow-hidden">
         {/* Sidebar - Always visible on mobile, can be collapsed on desktop */}
-        <div className={`${sidebarCollapsed ? 'hidden md:hidden' : 'flex'} ${selectedChat ? 'hidden md:flex' : 'flex'} w-full md:w-1/3 lg:w-1/4 bg-[#313131] dark:bg-zinc-900 flex-col relative transition-all duration-300 ease-in-out`}>
+        <div className={`${sidebarCollapsed ? 'hidden md:hidden' : 'flex'} ${selectedChat ? 'hidden md:flex' : 'flex'} w-full md:w-1/3 lg:w-1/4 bg-[#f0f0f0] dark:bg-zinc-900 flex-col relative transition-all duration-300 ease-in-out`}>
           {/* Sidebar Header */}
-          <div className="p-4 border-b border-[#474747] dark:border-zinc-800 flex justify-between items-center">
-            <h2 className="text-white text-xl font-semibold">Messages</h2>
+          <div className="p-4 border-b border-gray-200 dark:border-zinc-800 flex justify-between items-center">
+            <h2 className="text-black dark:text-white text-xl font-semibold">Messages</h2>
             <div className="flex space-x-3">
               <button
-                className="text-white hover:text-med-green transition-colors"
+                className="text-gray-700 dark:text-white hover:text-med-green transition-colors"
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
@@ -249,7 +249,7 @@ export default function ChatPage() {
                 <FaUserFriends size={20} />
               </button>
               <button
-                className="text-white hover:text-med-green transition-colors"
+                className="text-gray-700 dark:text-white hover:text-med-green transition-colors"
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
@@ -262,7 +262,7 @@ export default function ChatPage() {
               </button>
               {/* Collapse sidebar button - visible only on desktop */}
               <button
-                className="hidden md:block text-white hover:text-med-green transition-colors"
+                className="hidden md:block text-gray-700 dark:text-white hover:text-med-green transition-colors"
                 onClick={() => setSidebarCollapsed(true)}
                 title="Collapse sidebar"
                 type="button"
@@ -289,11 +289,11 @@ export default function ChatPage() {
         </div>
 
         {/* Chat Area */}
-        <div className={`${selectedChat ? 'flex' : 'hidden md:flex'} ${sidebarCollapsed ? 'w-full' : 'w-full md:w-2/3 lg:w-3/4'} bg-[#191919] dark:bg-zinc-950 flex-col h-full relative`}>
+        <div className={`${selectedChat ? 'flex' : 'hidden md:flex'} ${sidebarCollapsed ? 'w-full' : 'w-full md:w-2/3 lg:w-3/4'} bg-[#f0f0f0] dark:bg-zinc-950 flex-col h-full relative`}>
           {/* Expand sidebar button - visible only when sidebar is collapsed on desktop */}
           {sidebarCollapsed && (
             <button
-              className="hidden md:flex absolute left-0 top-1/2 transform -translate-y-1/2 bg-[#313131] dark:bg-zinc-900 text-white p-1 rounded-r-md shadow-md z-10"
+              className="hidden md:flex absolute left-0 top-1/2 transform -translate-y-1/2 bg-gray-200 dark:bg-zinc-900 text-gray-700 dark:text-white p-1 rounded-r-md shadow-md z-10"
               onClick={() => setSidebarCollapsed(false)}
               title="Expand sidebar"
               aria-label="Expand sidebar"

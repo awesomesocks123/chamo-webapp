@@ -114,18 +114,18 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ recipientId, onBackClick,
         )}
         
         <div 
-          className="w-10 h-10 bg-med-green text-white rounded-full flex items-center justify-center mr-3 cursor-pointer hover:opacity-80 transition-opacity"
+          className="w-10 h-10 bg-med-green text-white rounded-full flex items-center justify-center mr-3 cursor-pointer hover:bg-dark-green dark:hover:bg-light-green transition-colors"
           onClick={() => onViewProfile && recipient && onViewProfile(recipient.uid)}
           title="View profile"
         >
           {recipient?.photoURL ? (
-            <img src={recipient.photoURL} alt={recipient?.username} className="w-10 h-10 rounded-full" />
+            <img src={recipient.photoURL} alt={recipient?.username} className="w-10 h-10 rounded-full object-cover" />
           ) : (
             <IoPersonCircle size={40} />
           )}
         </div>
         <div 
-          className="flex-1 cursor-pointer hover:opacity-80 transition-opacity"
+          className="flex-1 cursor-pointer hover:bg-gray-100 dark:hover:bg-zinc-700 rounded-md p-1 transition-colors"
           onClick={() => onViewProfile && recipient && onViewProfile(recipient.uid)}
         >
           <h2 className="font-semibold text-gray-800 dark:text-white">{recipient?.username || 'User'}</h2>
@@ -152,12 +152,12 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ recipientId, onBackClick,
                   <div 
                     className={`max-w-[70%] rounded-lg p-3 ${
                       isCurrentUser 
-                        ? 'bg-med-green text-white' 
+                        ? 'bg-med-green text-gray-800 dark:text-white' 
                         : 'bg-white dark:bg-zinc-800 text-gray-800 dark:text-white'
                     }`}
                   >
                     <p>{message.text}</p>
-                    <p className={`text-xs mt-1 ${isCurrentUser ? 'text-green-100' : 'text-gray-500 dark:text-gray-400'}`}>
+                    <p className={`text-xs mt-1 ${isCurrentUser ? 'text-gray-600 dark:text-green-100' : 'text-gray-500 dark:text-gray-400'}`}>
                       {formatTimestamp(message.timestamp)}
                       {message.status && isCurrentUser && (
                         <span className="ml-2">
@@ -191,7 +191,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ recipientId, onBackClick,
           />
           <button
             type="submit"
-            className="bg-med-green text-white p-2 rounded-r-md hover:bg-dark-green transition-colors"
+            className="bg-med-green text-white p-2 rounded-r-md hover:bg-dark-green dark:hover:bg-light-green transition-colors"
           >
             <IoSend size={20} />
           </button>

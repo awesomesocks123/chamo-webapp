@@ -11,56 +11,39 @@ import Image from 'next/image';
 import SettingsModal from '../components/SettingsModal';
 import UserProfileModal from '../components/UserProfileModal';
 import NotificationsPanel from '../components/NotificationsPanel';
+import { getChatRooms, createChatRoom, ChatRoom } from '../lib/chatRoomService';
 
-// Mock data for topics
-const mockTopics = [
+// Default chat rooms to create if none exist
+const defaultChatRooms: Omit<ChatRoom, 'id' | 'createdAt' | 'activeUsers'>[] = [
   {
-    id: '1',
-    topicTitle: 'Anime',
-    topicDescription: 'Discuss your favorite anime series and characters',
-    topicCreator: 'user1',
-    subscribers: 1250,
-    topicImage: '/anime.jpg'
+    title: 'Anime',
+    description: 'Discuss your favorite anime series and characters',
+    imageUrl: 'https://via.placeholder.com/300x200/FF5733/FFFFFF?text=Anime',
+    category: 'Entertainment'
   },
   {
-    id: '2',
-    topicTitle: 'Gaming',
-    topicDescription: 'Share gaming experiences, tips, and find gaming buddies',
-    topicCreator: 'user2',
-    subscribers: 2100,
-    topicImage: '/gaming.jpg'
+    title: 'Gaming',
+    description: 'Connect with fellow gamers and discuss the latest games',
+    imageUrl: 'https://via.placeholder.com/300x200/33FF57/000000?text=Gaming',
+    category: 'Entertainment'
   },
   {
-    id: '3',
-    topicTitle: 'Music',
-    topicDescription: 'Talk about your favorite artists, songs, and music genres',
-    topicCreator: 'user3',
-    subscribers: 1800,
-    topicImage: '/music.jpg'
+    title: 'Art',
+    description: 'Share your artwork and get inspired by others',
+    imageUrl: 'https://via.placeholder.com/300x200/5733FF/FFFFFF?text=Art',
+    category: 'Creative'
   },
   {
-    id: '4',
-    topicTitle: 'Art',
-    topicDescription: 'Share your artwork and get inspired by others',
-    topicCreator: 'user4',
-    subscribers: 950,
-    topicImage: '/art.jpg'
+    title: 'Coding',
+    description: 'Discuss programming languages, projects, and coding challenges',
+    imageUrl: 'https://via.placeholder.com/300x200/3357FF/FFFFFF?text=Coding',
+    category: 'Technology'
   },
   {
-    id: '5',
-    topicTitle: 'Coding',
-    topicDescription: 'Discuss programming languages, projects, and coding challenges',
-    topicCreator: 'user5',
-    subscribers: 1500,
-    topicImage: '/coding.jpg'
-  },
-  {
-    id: '6',
-    topicTitle: 'Photography',
-    topicDescription: 'Share photography tips, techniques, and your best shots',
-    topicCreator: 'user6',
-    subscribers: 1100,
-    topicImage: '/photography.jpg'
+    title: 'Photography',
+    description: 'Share photography tips, techniques, and your best shots',
+    imageUrl: 'https://via.placeholder.com/300x200/FF33A6/FFFFFF?text=Photography',
+    category: 'Creative'
   }
 ];
 
@@ -69,13 +52,13 @@ export default function ExplorePage() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-  const [filteredItems, setFilteredItems] = useState<typeof mockTopics>([]);
-  const [topics, setTopics] = useState<typeof mockTopics>(mockTopics);
+  const [filteredItems, setFilteredItems] = useState<ChatRoom[]>([]);
+  const [topics, setTopics] = useState<ChatRoom[]>([]);
   const [toggleTopicPage, setTopicPage] = useState(false);
   const [topicTitle, setTopicTitle] = useState('');
   const [topicDescription, setTopicDescription] = useState('');
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
-  const [sorted, setSorted] = useState({ sorted: "topicTitle", reversed: false });
+  const [sorted, setSorted] = useState({ sorted: "title", reversed: false });
   
   // For NavBar functionality
   const [showNotifications, setShowNotifications] = useState(false);
@@ -87,11 +70,40 @@ export default function ExplorePage() {
     if (!authUser) {
       // Redirect to login if not authenticated
       router.replace('/auth/login');
-    } else {
-      setIsLoading(false);
-      // In a real app, you would fetch topics from the server here
+      return;
     }
+    
+    // Subscribe to chat rooms
+    const unsubscribe = getChatRooms((rooms) => {
+      setTopics(rooms);
+      setFilteredItems(rooms);
+      
+      // If no rooms exist, create default rooms
+      if (rooms.length === 0) {
+        console.log('No chat rooms found, creating default rooms...');
+        createDefaultRooms();
+      }
+      
+      setIsLoading(false);
+    });
+    
+    // Cleanup subscription on unmount
+    return () => {
+      unsubscribe();
+    };
   }, [authUser, router]);
+  
+  // Create default chat rooms
+  const createDefaultRooms = async () => {
+    try {
+      for (const room of defaultChatRooms) {
+        await createChatRoom(room);
+      }
+      console.log('Default chat rooms created successfully');
+    } catch (error) {
+      console.error('Error creating default chat rooms:', error);
+    }
+  };
 
   const handleSignOut = () => {
     // Clear the auth user from context
@@ -131,23 +143,31 @@ export default function ExplorePage() {
 
   const handleSearch = (query: string) => {
     setSearchQuery(query);
-    const filtered = topics.filter(item =>
-      item.topicTitle.toLowerCase().includes(query.toLowerCase()) ||
-      item.topicDescription.toLowerCase().includes(query.toLowerCase())
+    
+    if (!query) {
+      setFilteredItems(topics);
+      return;
+    }
+    
+    const filtered = topics.filter(item => 
+      item.title.toLowerCase().includes(query.toLowerCase()) ||
+      item.description.toLowerCase().includes(query.toLowerCase())
     );
+    
     setFilteredItems(filtered);
   };
 
   const sortByName = () => {
-    const newReversed = !sorted.reversed;
-    setSorted({ sorted: "topicTitle", reversed: newReversed });
     const topicsCopy = [...topics];
-    topicsCopy.sort((topicA, topicB) => {
-      if (newReversed) {
-        return topicB.topicTitle.localeCompare(topicA.topicTitle);
-      }
-      return topicA.topicTitle.localeCompare(topicB.topicTitle);
-    });
+    if (sorted.sorted === "title") {
+      topicsCopy.sort((a, b) => {
+        if (sorted.reversed) {
+          return b.title.localeCompare(a.title);
+        }
+        return a.title.localeCompare(b.title);
+      });
+      setSorted({ sorted: "title", reversed: !sorted.reversed });
+    }
     setTopics([...topicsCopy]);
   };
 
@@ -184,22 +204,31 @@ export default function ExplorePage() {
   };
 
   const CreateTopic = async () => {
-    // In a real app, you would send this data to your server
-    // For now, let's just add it to our local state
-    const newTopic = {
-      id: (topics.length + 1).toString(),
-      topicTitle,
-      topicDescription,
-      topicCreator: authUser || 'anonymous',
-      subscribers: 0,
-      topicImage: selectedImage ? URL.createObjectURL(selectedImage) : '/default.jpg'
-    };
-    
-    setTopics([...topics, newTopic]);
-    setTopicTitle('');
-    setTopicDescription('');
-    setSelectedImage(null);
-    setTopicPage(false);
+    try {
+      // Create a new chat room in Firestore
+      const imageUrl = selectedImage ? URL.createObjectURL(selectedImage) : 'https://via.placeholder.com/300x200/33A6FF/FFFFFF?text=Custom+Topic';
+      
+      const newRoom = {
+        title: topicTitle,
+        description: topicDescription,
+        imageUrl: imageUrl,
+        category: 'User Created'
+      };
+      
+      await createChatRoom(newRoom);
+      
+      // Reset form
+      setTopicTitle('');
+      setTopicDescription('');
+      setSelectedImage(null);
+      setTopicPage(false);
+      
+      // Note: We don't need to update the topics state manually
+      // as our Firestore subscription will automatically update it
+    } catch (error) {
+      console.error('Error creating chat room:', error);
+      alert('Failed to create chat room. Please try again.');
+    }
   };
 
   const UploadImageButton = () => {
@@ -220,22 +249,37 @@ export default function ExplorePage() {
     );
   };
 
-  const TopicCard = ({ topic }: { topic: any }) => {
+  const TopicCard = ({ topic }: { topic: ChatRoom }) => {
+    const router = useRouter();
+    
+    const handleJoinRoom = () => {
+      // Navigate to the chat room page
+      router.push(`/chatroom/${topic.id}`);
+    };
+    
     return (
       <div className="bg-white rounded-lg shadow-md overflow-hidden">
         <div className="h-40 bg-gray-300 relative">
-          {topic.topicImage && (
+          {topic.imageUrl && (
             <div className="w-full h-full relative">
-              <div className="absolute inset-0 bg-center bg-cover" style={{ backgroundImage: `url(${topic.topicImage})` }}></div>
+              <Image 
+                src={topic.imageUrl} 
+                alt={topic.title} 
+                fill 
+                className="object-cover"
+              />
             </div>
           )}
         </div>
         <div className="p-4">
-          <h3 className="text-xl font-semibold text-gray-800">{topic.topicTitle}</h3>
-          <p className="text-gray-600 text-sm mt-1">{topic.topicDescription}</p>
+          <h3 className="text-xl font-semibold text-gray-800">{topic.title}</h3>
+          <p className="text-gray-600 text-sm mt-1">{topic.description}</p>
           <div className="flex justify-between items-center mt-4">
-            <span className="text-sm text-gray-500">{topic.subscribers} subscribers</span>
-            <button className="bg-med-green text-white px-4 py-2 rounded-md hover:bg-dark-green transition-colors">
+            <span className="text-sm text-gray-500">{topic.category}</span>
+            <button 
+              onClick={handleJoinRoom}
+              className="bg-med-green text-white px-4 py-2 rounded-md hover:bg-dark-green transition-colors"
+            >
               Join
             </button>
           </div>
@@ -295,7 +339,7 @@ export default function ExplorePage() {
                 onClick={sortByName} 
                 className="flex items-center bg-gray-200 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-300 transition-colors mr-4"
               >
-                Sort {sorted.sorted === "topicTitle" && renderArrow()}
+                Sort {sorted.sorted === "title" && renderArrow()}
               </button>
               <CreateTopicBtn />
             </div>

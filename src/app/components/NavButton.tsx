@@ -12,7 +12,7 @@ const NavButton: React.FC<NavButtonProps> = ({ icon, onClick, tooltip }) => {
   return (
     <div className="relative">
       <button 
-        className="w-10 h-10 rounded-full flex items-center justify-center bg-med-green text-dark-grey hover:bg-light-green transition-colors"
+        className="w-10 h-10 rounded-full flex items-center justify-center bg-med-green text-white hover:bg-light-green dark:hover:bg-dark-green transition-colors"
         onClick={onClick}
         onMouseEnter={() => setShowTooltip(true)}
         onMouseLeave={() => setShowTooltip(false)}

@@ -152,13 +152,13 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ userId, onClose }) => {
                   </div>
                 )}
               </div>
-              <h3 className="text-xl font-semibold text-dark-grey dark:text-white">{userProfile.username}</h3>
-              <div className="flex items-center text-gray-500 dark:text-gray-400">
+              <h3 className="text-xl font-semibold text-black dark:text-white">{userProfile.username}</h3>
+              <div className="flex items-center text-gray-600 dark:text-white">
                 <IoMail className="mr-2" />
                 <span>{userProfile.email}</span>
               </div>
               {userProfile.createdAt && (
-                <div className="flex items-center text-gray-500 dark:text-gray-400 text-sm">
+                <div className="flex items-center text-gray-600 dark:text-white text-sm">
                   <IoCalendar className="mr-2" />
                   <span>Joined {typeof userProfile.createdAt === 'object' && 'seconds' in userProfile.createdAt
                     ? new Date((userProfile.createdAt as any).seconds * 1000).toLocaleDateString()
@@ -168,7 +168,7 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ userId, onClose }) => {
             </div>
             <div className="flex-1 p-4">
               <div className="mb-6">
-                <h4 className="text-lg font-medium mb-2 text-dark-grey dark:text-white">Actions</h4>
+                <h4 className="text-lg font-medium mb-2 text-black dark:text-white">Actions</h4>
                 <div className="space-y-2">
                   {isFriend ? (
                     <button className="w-full py-2 px-4 bg-gray-200 dark:bg-zinc-700 text-gray-800 dark:text-white rounded flex items-center justify-center" disabled>
@@ -179,7 +179,7 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ userId, onClose }) => {
                       <IoCheckmark className="mr-2" /> Request Sent
                     </button>
                   ) : (
-                    <button onClick={handleSendFriendRequest} className="w-full py-2 px-4 bg-med-green text-white rounded hover:bg-dark-green transition-colors flex items-center justify-center">
+                    <button onClick={handleSendFriendRequest} className="w-full py-2 px-4 bg-med-green text-white rounded hover:bg-dark-green dark:hover:bg-light-green transition-colors flex items-center justify-center">
                       <IoPersonAdd className="mr-2" /> Add Friend
                     </button>
                   )}
@@ -189,22 +189,22 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ userId, onClose }) => {
               </div>
               {userProfile.bio && (
                 <div className="mb-6">
-                  <h4 className="text-lg font-medium mb-2 text-dark-grey dark:text-white">Bio</h4>
-                  <p className="text-gray-800 dark:text-gray-300">{userProfile.bio}</p>
+                  <h4 className="text-lg font-medium mb-2 text-black dark:text-white">Bio</h4>
+                  <p className="text-gray-600 dark:text-white">{userProfile.bio}</p>
                 </div>
               )}
               <div>
-                <h4 className="text-lg font-medium mb-2 text-dark-grey dark:text-white">Status</h4>
+                <h4 className="text-lg font-medium mb-2 text-black dark:text-white">Status</h4>
                 <div className="flex items-center">
                   <div className={`w-3 h-3 rounded-full mr-2 ${userProfile.status === 'online' ? 'bg-green-500' : 'bg-gray-500'}`}></div>
-                  <p className="text-gray-800 dark:text-gray-300 capitalize">{userProfile.status || 'Offline'}</p>
+                  <p className="text-gray-600 dark:text-white capitalize">{userProfile.status || 'Offline'}</p>
                 </div>
               </div>
             </div>
           </div>
         ) : (
           <div className="flex-1 flex items-center justify-center">
-            <p className="text-gray-500 dark:text-gray-400">User not found</p>
+            <p className="text-gray-600 dark:text-white">User not found</p>
           </div>
         )}
       </div>
