@@ -55,7 +55,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ onClose }) => {
   };
   
   return (
-    <div className="fixed inset-0 z-50 flex justify-end bg-black bg-opacity-50 md:bg-opacity-30" onClick={handleClose}>
+    <div className="fixed inset-0 z-50 flex justify-end bg-black/50 md:bg-opacity-30" onClick={handleClose}>
       <div 
         ref={modalRef}
         className="w-full h-full md:w-[400px] bg-[#f0f0f0] dark:bg-zinc-800 transform translate-x-full transition-transform duration-300 ease-in-out flex flex-col overflow-auto"

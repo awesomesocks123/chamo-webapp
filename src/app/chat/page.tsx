@@ -20,7 +20,7 @@ import { getUserFriends, UserProfile } from '../lib/userService';
 import { auth } from '../lib/firebase';
 
 export default function ChatPage() {
-  const { authUser, setAuthUser } = useContext(AuthContext);
+  const { authUser, setAuthUser, isInitializing } = useContext(AuthContext);
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(true);
   const [selectedChat, setSelectedChat] = useState<string | null>(null);
@@ -34,16 +34,23 @@ export default function ChatPage() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   useEffect(() => {
+    // Wait for authentication to initialize before checking
+    if (isInitializing) {
+      console.log('Auth is initializing, waiting...');
+      return;
+    }
+    
     // Check if user is authenticated
     if (!authUser) {
+      console.log('User not authenticated, redirecting to login');
       // Redirect to login if not authenticated
-      router.replace('/auth/login');
+      router.replace('/');
     } else {
       // Load friends list to enable starting new chats
       loadFriends();
       setIsLoading(false);
     }
-  }, [authUser, router]);
+  }, [authUser, isInitializing, router]);
   
   // Load friends list
   const loadFriends = async () => {

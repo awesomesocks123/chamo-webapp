@@ -2,6 +2,7 @@
 
 import React, { useContext, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { AuthContext } from '../context/AuthProvider';
 import NavBar from '../components/NavBar';
 import { IoPerson } from 'react-icons/io5';
@@ -10,39 +11,44 @@ import { FaArrowUp, FaArrowDown, FaPlus } from 'react-icons/fa';
 import SettingsModal from '../components/SettingsModal';
 import UserProfileModal from '../components/UserProfileModal';
 import NotificationsPanel from '../components/NotificationsPanel';
-import { getChatRooms, createChatRoom, ChatRoom } from '../lib/chatRoomService';
+import { getChatRooms, createChatRoom, ChatRoom, togglePinChatRoom, deleteChatRoom, claimChatRoomOwnership } from '../lib/chatRoomService';
 
 // Default chat rooms to create if none exist
 const defaultChatRooms: Omit<ChatRoom, 'id' | 'createdAt' | 'activeUsers'>[] = [
   {
     title: 'Anime',
     description: 'Discuss your favorite anime series and characters',
-    category: 'Entertainment'
+    category: 'Entertainment',
+    isDefault: true
   },
   {
     title: 'Gaming',
     description: 'Connect with fellow gamers and discuss the latest games',
-    category: 'Entertainment'
+    category: 'Entertainment',
+    isDefault: true
   },
   {
     title: 'Art',
     description: 'Share your artwork and get inspired by others',
-    category: 'Creative'
+    category: 'Creative',
+    isDefault: true
   },
   {
     title: 'Coding',
     description: 'Discuss programming languages, projects, and coding challenges',
-    category: 'Technology'
+    category: 'Technology',
+    isDefault: true
   },
   {
     title: 'Photography',
     description: 'Share photography tips, techniques, and your best shots',
-    category: 'Creative'
+    category: 'Creative',
+    isDefault: true
   }
 ];
 
 export default function ExplorePage() {
-  const { authUser, setAuthUser } = useContext(AuthContext);
+  const { authUser, setAuthUser, isInitializing } = useContext(AuthContext);
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -51,6 +57,9 @@ export default function ExplorePage() {
   const [toggleTopicPage, setTopicPage] = useState(false);
   const [topicTitle, setTopicTitle] = useState('');
   const [topicDescription, setTopicDescription] = useState('');
+  const [topicCategory, setTopicCategory] = useState('User Created');
+  const [error, setError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   const [sorted, setSorted] = useState({ sorted: "title", reversed: false });
   
@@ -60,10 +69,17 @@ export default function ExplorePage() {
   const [showUserProfileModal, setShowUserProfileModal] = useState(false);
 
   useEffect(() => {
-    // Check if user is authenticated
+    // Don't do anything while auth is initializing
+    if (isInitializing) {
+      console.log('Auth is initializing, waiting...');
+      return;
+    }
+    
+    // Check if user is authenticated after initialization is complete
     if (!authUser) {
+      console.log('User not authenticated, redirecting to login');
       // Redirect to login if not authenticated
-      router.replace('/auth/login');
+      router.replace('/');
       return;
     }
     
@@ -196,13 +212,68 @@ export default function ExplorePage() {
 
 
 
+  const handleTogglePin = async (roomId: string) => {
+    try {
+      setError(null);
+      await togglePinChatRoom(roomId);
+      setSuccessMessage('Topic pin status updated successfully');
+      setTimeout(() => setSuccessMessage(null), 3000);
+    } catch (error: any) {
+      console.error('Error toggling pin status:', error);
+      setError(error.message || 'Failed to update pin status');
+      setTimeout(() => setError(null), 3000);
+    }
+  };
+
+  const handleDeleteTopic = async (roomId: string) => {
+    try {
+      setError(null);
+      if (window.confirm('Are you sure you want to delete this topic? This action cannot be undone.')) {
+        await deleteChatRoom(roomId);
+        setSuccessMessage('Topic deleted successfully');
+        setTimeout(() => setSuccessMessage(null), 3000);
+      }
+    } catch (error: any) {
+      console.error('Error deleting topic:', error);
+      setError(error.message || 'Failed to delete topic');
+      setTimeout(() => setError(null), 3000);
+    }
+  };
+
+  const handleClaimOwnership = async (roomId: string) => {
+    try {
+      setError(null);
+      if (window.confirm('Do you want to claim ownership of this topic? This will allow you to delete it.')) {
+        await claimChatRoomOwnership(roomId);
+        setSuccessMessage('You now own this topic and can delete it');
+        setTimeout(() => setSuccessMessage(null), 3000);
+      }
+    } catch (error: any) {
+      console.error('Error claiming topic ownership:', error);
+      setError(error.message || 'Failed to claim topic ownership');
+      setTimeout(() => setError(null), 3000);
+    }
+  };
+
   const CreateTopic = async () => {
     try {
+      setError(null);
+      
+      if (!topicTitle.trim()) {
+        setError('Topic title is required');
+        return;
+      }
+      
+      if (!topicDescription.trim()) {
+        setError('Topic description is required');
+        return;
+      }
+      
       // Create a new chat room in Firestore
       const newRoom = {
         title: topicTitle,
         description: topicDescription,
-        category: 'User Created'
+        category: topicCategory
       };
       
       await createChatRoom(newRoom);
@@ -210,17 +281,48 @@ export default function ExplorePage() {
       // Reset form
       setTopicTitle('');
       setTopicDescription('');
+      setTopicCategory('User Created');
       setTopicPage(false);
+      setSuccessMessage('Topic created successfully');
+      setTimeout(() => setSuccessMessage(null), 3000);
       
       // Note: We don't need to update the topics state manually
       // as our Firestore subscription will automatically update it
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error creating chat room:', error);
-      alert('Failed to create chat room. Please try again.');
+      setError(error.message || 'Failed to create chat room');
     }
   };
 
 
+
+  // Function to get the appropriate image path based on topic title
+  const getTopicImagePath = (title: string) => {
+    const titleLower = title.toLowerCase();
+    
+    if (titleLower.includes('anime')) return '/topics/topic-anime.png';
+    if (titleLower.includes('art')) return '/topics/topic-art.jpg';
+    if (titleLower.includes('coding') || titleLower.includes('programming')) return '/topics/topic-coding.jpg';
+    if (titleLower.includes('comic')) return '/topics/topic-comic.png';
+    if (titleLower.includes('cooking') || titleLower.includes('food')) return '/topics/topic-cooking.jpg';
+    if (titleLower.includes('gaming') || titleLower.includes('game')) return '/topics/topic-game.png';
+    if (titleLower.includes('movie') || titleLower.includes('film')) return '/topics/topic-movies.jpg';
+    if (titleLower.includes('music')) return '/topics/topic-music.png';
+    if (titleLower.includes('photo') || titleLower.includes('photography')) return '/topics/topic-photo.jpg';
+    if (titleLower.includes('sports') || titleLower.includes('sport')) return '/topics/topic-sports.jpg';
+    if (titleLower.includes('tabletop') || titleLower.includes('board game')) return '/topics/topic-tabletop.jpg';
+    
+    // Default to a random image if no match is found
+    const imagePaths = [
+      '/topics/topic-anime.png',
+      '/topics/topic-art.jpg',
+      '/topics/topic-coding.jpg',
+      '/topics/topic-game.png',
+      '/topics/topic-music.png',
+      '/topics/topic-photo.jpg'
+    ];
+    return imagePaths[Math.floor(Math.random() * imagePaths.length)];
+  };
 
   const TopicCard = ({ topic }: { topic: ChatRoom }) => {
     const router = useRouter();
@@ -230,13 +332,104 @@ export default function ExplorePage() {
       router.push(`/chatroom/${topic.id}`);
     };
     
+    // Get the appropriate image path for this topic
+    const topicImagePath = getTopicImagePath(topic.title);
+    
+    // Check if the current user is the creator of this topic
+    const isCreator = topic.creatorId === authUser;
+    
+    // Determine if the topic can be deleted (only user-created topics by the current user)
+    const canDelete = isCreator && !topic.isDefault;
+    
+    // Determine if the topic can be claimed (not default and has no creator or creator is current user)
+    const canClaim = !topic.isDefault && (!topic.creatorId || topic.creatorId === authUser);
+    
     return (
       <div className="rounded-lg shadow-md overflow-hidden bg-white dark:bg-zinc-700">
-        <div className="h-40 relative flex items-center justify-center bg-gray-300 dark:bg-zinc-600">
-          <h3 className="text-xl font-semibold text-gray-800 dark:text-lighter-green">{topic.title}</h3>
+        {/* Topic Image with Background */}
+        <div 
+          className="h-40 flex items-center justify-center relative"
+          style={{
+            backgroundImage: `url(${topicImagePath})`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center'
+          }}
+        >
+          <div className="absolute inset-0 bg-black/10"></div>
+          <div className="relative z-10 text-center p-2">
+            <h3 className="text-xl font-semibold text-white drop-shadow-md">{topic.title}</h3>
+          </div>
+          
+          {/* Pin/Unpin Button */}
+          <div className="absolute top-2 right-2 z-20">
+            <button 
+              onClick={(e) => {
+                e.stopPropagation();
+                if (topic.id) handleTogglePin(topic.id);
+              }}
+              className="p-1 rounded-full bg-white/80 hover:bg-white text-gray-800 transition-colors"
+              title={topic.isPinned ? 'Unpin topic' : 'Pin topic'}
+            >
+              {topic.isPinned ? (
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                  <path d="M5 4a2 2 0 012-2h6a2 2 0 012 2v14l-5-2.5L5 18V4z" />
+                </svg>
+              ) : (
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+                </svg>
+              )}
+            </button>
+          </div>
+          
+          {/* Delete Button - Only shown for user-created topics */}
+          {canDelete && (
+            <div className="absolute top-2 left-2 z-20">
+              <button 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (topic.id) handleDeleteTopic(topic.id);
+                }}
+                className="p-1 rounded-full bg-white/80 hover:bg-red-100 text-red-600 transition-colors"
+                title="Delete topic"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+              </button>
+            </div>
+          )}
+          
+          {/* Claim Ownership Button - For topics without an owner */}
+          {canClaim && !isCreator && (
+            <div className="absolute top-2 left-2 z-20">
+              <button 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (topic.id) handleClaimOwnership(topic.id);
+                }}
+                className="p-1 rounded-full bg-white/80 hover:bg-green-100 text-green-600 transition-colors"
+                title="Claim ownership of this topic"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+              </button>
+            </div>
+          )}
         </div>
+        
+        {/* Topic Details */}
         <div className="p-4">
-          <h3 className="text-xl font-semibold text-gray-800 dark:text-gray-200">{topic.title}</h3>
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200">{topic.title}</h3>
+            {topic.isDefault && (
+              <span className="text-xs px-2 py-1 bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 rounded-full">Default</span>
+            )}
+            {isCreator && !topic.isDefault && (
+              <span className="text-xs px-2 py-1 bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 rounded-full">Created by you</span>
+            )}
+          </div>
           <p className="text-sm mt-1 text-gray-600 dark:text-gray-300">{topic.description}</p>
           <div className="flex justify-between items-center mt-4">
             <span className="text-sm text-gray-500 dark:text-gray-400">{topic.category}</span>
@@ -279,9 +472,7 @@ export default function ExplorePage() {
       )}
       
       {showNotifications && (
-        <div className="fixed top-16 right-4 z-50">
-          <NotificationsPanel onClose={() => setShowNotifications(false)} />
-        </div>
+        <NotificationsPanel onClose={() => setShowNotifications(false)} />
       )}
 
       <div className="flex-1 overflow-y-auto bg-light-green dark:!bg-[#191919]">
@@ -309,6 +500,19 @@ export default function ExplorePage() {
             </div>
           </div>
 
+          {/* Status Messages */}
+          {error && (
+            <div className="rounded-lg p-3 mb-4 bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-200">
+              <p>{error}</p>
+            </div>
+          )}
+          
+          {successMessage && (
+            <div className="rounded-lg p-3 mb-4 bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-200">
+              <p>{successMessage}</p>
+            </div>
+          )}
+          
           {/* Create Topic Form */}
           {toggleTopicPage && (
             <div className="rounded-lg shadow-md p-6 mb-6 bg-white dark:bg-zinc-700">
@@ -331,6 +535,19 @@ export default function ExplorePage() {
                     onChange={(e) => setTopicDescription(e.target.value)}
                     className="w-full h-32 border rounded-md py-2 px-4 mb-4 focus:outline-none focus:ring-2 focus:ring-med-green resize-none bg-white dark:bg-zinc-800 text-gray-800 dark:text-gray-200 border-gray-300 dark:border-zinc-600"
                   />
+                  <select
+                    value={topicCategory}
+                    onChange={(e) => setTopicCategory(e.target.value)}
+                    className="w-full border rounded-md py-2 px-4 mb-4 focus:outline-none focus:ring-2 focus:ring-med-green bg-white dark:bg-zinc-800 text-gray-800 dark:text-gray-200 border-gray-300 dark:border-zinc-600"
+                  >
+                    <option value="User Created">User Created</option>
+                    <option value="Entertainment">Entertainment</option>
+                    <option value="Technology">Technology</option>
+                    <option value="Creative">Creative</option>
+                    <option value="Education">Education</option>
+                    <option value="Lifestyle">Lifestyle</option>
+                    <option value="Other">Other</option>
+                  </select>
                   <button 
                     onClick={CreateTopic} 
                     className="font-medium py-2 px-6 rounded-md transition-colors hover:opacity-90 bg-med-green dark:bg-dark-green text-dark-grey dark:text-lighter-green"
@@ -338,7 +555,16 @@ export default function ExplorePage() {
                     Submit
                   </button>
                 </div>
-
+                <div className="w-1/2 border-l pl-6 border-gray-200 dark:border-zinc-600">
+                  <h3 className="text-lg font-semibold mb-2 text-gray-800 dark:text-gray-200">Topic Guidelines</h3>
+                  <ul className="list-disc pl-5 text-gray-600 dark:text-gray-300 space-y-2">
+                    <li>You can create your own topics to discuss with others</li>
+                    <li>You can pin/unpin any topic to customize your view</li>
+                    <li>You can only delete topics that you've created</li>
+                    <li>Default topics cannot be deleted but can be unpinned</li>
+                    <li>Be respectful and follow community guidelines</li>
+                  </ul>
+                </div>
               </div>
             </div>
           )}

@@ -12,10 +12,19 @@ import loginBg from './assets/login-bg.png';
 import { signInWithGoogle } from './lib/firebase';
 
 export default function Home() {
-    const { authUser, setAuthUser } = useContext(AuthContext);
+    const { authUser, setAuthUser, isInitializing } = useContext(AuthContext);
     const [errorMessage, setErrorMessage] = useState("");
     const [isLoading, setIsLoading] = useState(false);
     const router = useRouter();
+
+    // Wait for authentication to initialize before redirecting
+    if (isInitializing) {
+        return (
+            <div className="min-h-screen flex justify-center items-center bg-light-green">
+                <p className="text-lg font-medium text-dark-grey">Loading...</p>
+            </div>
+        );
+    }
 
     // If user is already logged in, redirect to chat
     if (authUser) {

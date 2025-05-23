@@ -7,18 +7,23 @@ import { IoMdPerson } from 'react-icons/io';
 import { BsGearWideConnected } from 'react-icons/bs';
 import { IoSearch, IoMenu, IoClose } from 'react-icons/io5';
 import NavButton from './NavButton';
+import { auth } from '../lib/firebase';
+import { getPendingFriendRequests } from '../lib/userService';
 
 interface NavBarProps {
   onNavButtonClick: (buttonName: string) => void;
   onSignOut: () => void;
   onSearch?: (query: string) => void;
+  onNotificationUpdate?: (count: number) => void;
 }
 
-const NavBar: React.FC<NavBarProps> = ({ onNavButtonClick, onSignOut, onSearch }) => {
+const NavBar: React.FC<NavBarProps> = ({ onNavButtonClick, onSignOut, onSearch, onNotificationUpdate }) => {
   const [showSearchInput, setShowSearchInput] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [notificationCount, setNotificationCount] = useState(0);
+  const [isLoadingNotifications, setIsLoadingNotifications] = useState(false);
   
   // Check if we're on mobile based on screen width
   useEffect(() => {
@@ -38,6 +43,53 @@ const NavBar: React.FC<NavBarProps> = ({ onNavButtonClick, onSignOut, onSearch }
     // Cleanup
     return () => window.removeEventListener('resize', checkIfMobile);
   }, []);
+  
+  // Load notification count (pending friend requests)
+  useEffect(() => {
+    const loadNotificationCount = async () => {
+      if (!auth.currentUser) return;
+      
+      setIsLoadingNotifications(true);
+      
+      try {
+        const requests = await getPendingFriendRequests(auth.currentUser.uid);
+        setNotificationCount(requests.length);
+        
+        // Notify parent component if callback provided
+        if (onNotificationUpdate) {
+          onNotificationUpdate(requests.length);
+        }
+      } catch (error) {
+        console.error('Error loading notifications:', error);
+      } finally {
+        setIsLoadingNotifications(false);
+      }
+    };
+    
+    loadNotificationCount();
+    
+    // Set up an interval to check for new notifications every minute
+    const intervalId = setInterval(loadNotificationCount, 60000);
+    
+    return () => clearInterval(intervalId);
+  }, [onNotificationUpdate]);
+  
+  // Function to refresh notifications (called after accepting/rejecting a request)
+  const refreshNotifications = async () => {
+    if (!auth.currentUser) return;
+    
+    try {
+      const requests = await getPendingFriendRequests(auth.currentUser.uid);
+      setNotificationCount(requests.length);
+      
+      // Notify parent component if callback provided
+      if (onNotificationUpdate) {
+        onNotificationUpdate(requests.length);
+      }
+    } catch (error) {
+      console.error('Error refreshing notifications:', error);
+    }
+  };
 
   const handleSearchClick = () => {
     setShowSearchInput(!showSearchInput);
@@ -96,9 +148,18 @@ const NavBar: React.FC<NavBarProps> = ({ onNavButtonClick, onSignOut, onSearch }
               <div className="relative">
                 <button 
                   className="nav-button w-10 h-10 rounded-2xl flex items-center justify-center bg-med-green text-white hover:bg-dark-green transition-colors"
-                  onClick={() => onNavButtonClick('notifications')}
+                  onClick={() => {
+                    onNavButtonClick('notifications');
+                    // Refresh notifications when the panel is opened
+                    refreshNotifications();
+                  }}
                 >
                   <CiBellOn size={20} />
+                  {notificationCount > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                      {notificationCount}
+                    </span>
+                  )}
                 </button>
               </div>
               

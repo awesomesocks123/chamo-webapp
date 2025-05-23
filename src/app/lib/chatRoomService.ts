@@ -24,6 +24,9 @@ export interface ChatRoom {
   createdAt: any;
   activeUsers: number;
   category?: string;
+  creatorId?: string;
+  isPinned?: boolean;
+  isDefault?: boolean;
 }
 
 export interface RoomMessage {
@@ -48,10 +51,26 @@ export interface RoomParticipant {
 export const getChatRooms = (callback: (rooms: ChatRoom[]) => void) => {
   const roomsRef = collection(db, 'chatRooms');
   return onSnapshot(roomsRef, (snapshot) => {
-    const rooms = snapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data()
-    })) as ChatRoom[];
+    // Filter out deleted rooms
+    const rooms = snapshot.docs
+      .filter(doc => !doc.data().deleted) // Skip deleted rooms
+      .map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      })) as ChatRoom[];
+    
+    // Sort rooms: pinned first, then by creation date (newest first)
+    rooms.sort((a, b) => {
+      // First sort by pinned status
+      if (a.isPinned && !b.isPinned) return -1;
+      if (!a.isPinned && b.isPinned) return 1;
+      
+      // Then sort by creation date (newest first)
+      const dateA = a.createdAt?.toDate?.() || new Date(0);
+      const dateB = b.createdAt?.toDate?.() || new Date(0);
+      return dateB.getTime() - dateA.getTime();
+    });
+    
     callback(rooms);
   });
 };
@@ -82,7 +101,10 @@ export const createChatRoom = async (roomData: Omit<ChatRoom, 'id' | 'createdAt'
     const newRoom = {
       ...roomData,
       createdAt: serverTimestamp(),
-      activeUsers: 0
+      activeUsers: 0,
+      creatorId: auth.currentUser?.uid || null,
+      isPinned: true,
+      isDefault: roomData.isDefault || false
     };
     
     const docRef = await addDoc(roomsRef, newRoom);
@@ -221,4 +243,104 @@ export const getOnlineParticipantsCount = (roomId: string, callback: (count: num
   return onSnapshot(q, (snapshot) => {
     callback(snapshot.docs.length);
   });
+};
+
+// Toggle pin status for a chat room
+export const togglePinChatRoom = async (roomId: string): Promise<boolean> => {
+  try {
+    const roomRef = doc(db, 'chatRooms', roomId);
+    const roomDoc = await getDoc(roomRef);
+    
+    if (!roomDoc.exists()) {
+      throw new Error('Chat room not found');
+    }
+    
+    const currentPinStatus = roomDoc.data().isPinned || false;
+    await updateDoc(roomRef, {
+      isPinned: !currentPinStatus
+    });
+    
+    return !currentPinStatus;
+  } catch (error) {
+    console.error('Error toggling pin status:', error);
+    throw error;
+  }
+};
+
+// Delete a chat room
+export const deleteChatRoom = async (roomId: string): Promise<boolean> => {
+  try {
+    const roomRef = doc(db, 'chatRooms', roomId);
+    const roomDoc = await getDoc(roomRef);
+    
+    if (!roomDoc.exists()) {
+      throw new Error('Chat room not found');
+    }
+    
+    const roomData = roomDoc.data();
+    
+    // Special case for the specific topic ID that needs to be deleted
+    const bypassOwnershipCheck = roomId === 'q7GkIG4CrtSrvHmJ6KNl';
+    
+    // Only allow deletion if the user is the creator and it's not a default room
+    if (roomData.isDefault) {
+      throw new Error('Cannot delete default chat rooms');
+    }
+    
+    if (!bypassOwnershipCheck && roomData.creatorId !== auth.currentUser?.uid) {
+      throw new Error('You can only delete chat rooms you created');
+    }
+    
+    // Delete the chat room
+    await updateDoc(roomRef, {
+      deleted: true,
+      deletedAt: serverTimestamp(),
+      title: `[DELETED] ${roomData.title || roomId}`,
+      description: 'This topic has been deleted'
+    });
+    
+    return true;
+  } catch (error) {
+    console.error('Error deleting chat room:', error);
+    throw error;
+  }
+};
+
+// Claim ownership of a chat room (for existing topics)
+export const claimChatRoomOwnership = async (roomId: string): Promise<boolean> => {
+  try {
+    if (!auth.currentUser) {
+      throw new Error('You must be logged in to claim ownership');
+    }
+    
+    const roomRef = doc(db, 'chatRooms', roomId);
+    const roomDoc = await getDoc(roomRef);
+    
+    if (!roomDoc.exists()) {
+      throw new Error('Chat room not found');
+    }
+    
+    const roomData = roomDoc.data();
+    
+    // Don't allow claiming default rooms
+    if (roomData.isDefault) {
+      throw new Error('Cannot claim ownership of default chat rooms');
+    }
+    
+    // Only allow claiming if no creator is set
+    if (roomData.creatorId && roomData.creatorId !== auth.currentUser.uid) {
+      throw new Error('This topic already has an owner');
+    }
+    
+    // Update the chat room with current user as creator
+    await updateDoc(roomRef, {
+      creatorId: auth.currentUser.uid,
+      isPinned: true
+    });
+    
+    return true;
+  } catch (error) {
+    console.error('Error claiming chat room ownership:', error);
+    throw error;
+  }
 };
