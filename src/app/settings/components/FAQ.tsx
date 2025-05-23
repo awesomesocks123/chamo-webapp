@@ -27,11 +27,11 @@ const FAQ: React.FC = () => {
   ];
 
   return (
-    <div className="w-full h-full bg-gray-200 dark:bg-dark-grey rounded-lg p-6">
+    <div className="w-full h-full bg-gray-200 dark:bg-zinc-900 rounded-lg p-6">
       <h1 className="text-4xl font-semibold text-gray-700 dark:text-white mb-8">Frequently Asked Questions</h1>
       <div className="space-y-6">
         {faqs.map((faq, index) => (
-          <div key={index} className="bg-white dark:bg-zinc-700 rounded-lg p-6 shadow-sm">
+          <div key={index} className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow-sm">
             <h3 className="text-xl font-semibold text-gray-800 dark:text-white mb-3">{faq.question}</h3>
             <p className="text-gray-600 dark:text-gray-300">{faq.answer}</p>
           </div>

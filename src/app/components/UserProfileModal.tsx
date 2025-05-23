@@ -1,95 +1,294 @@
-import React from 'react';
-import { IoPerson } from 'react-icons/io5';
+'use client';
+
+import React, { useState, useEffect, useRef } from 'react';
+import { IoPerson, IoClose, IoCamera, IoPencil, IoMail, IoCalendar } from 'react-icons/io5';
+import { auth } from '../lib/firebase';
+import { getUserProfile, updateUserProfile, UserProfile } from '../lib/userService';
 
 interface UserProfileModalProps {
-  username: string;
-  email?: string;
   onClose: () => void;
 }
 
-const UserProfileModal: React.FC<UserProfileModalProps> = ({ username, email, onClose }) => {
+const UserProfileModal: React.FC<UserProfileModalProps> = ({ onClose }) => {
+  const modalRef = useRef<HTMLDivElement>(null);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+  const [editMode, setEditMode] = useState<boolean>(false);
+  const [bio, setBio] = useState<string>('');
+  
+  // Load user profile data
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      // Add debugging to see if auth.currentUser exists
+      console.log('Auth current user:', auth.currentUser);
+      
+      if (!auth.currentUser) {
+        console.warn('No current user found in auth object');
+        setError('You must be logged in to view your profile');
+        setLoading(false);
+        return;
+      }
+      
+      try {
+        console.log('Fetching profile for user ID:', auth.currentUser.uid);
+        const profile = await getUserProfile(auth.currentUser.uid);
+        console.log('Profile data retrieved:', profile);
+        
+        if (profile) {
+          setUserProfile(profile);
+          setBio(profile.bio || '');
+        } else {
+          console.warn('No profile found for current user');
+          setError('Profile not found. Please complete your profile setup.');
+        }
+      } catch (err) {
+        console.error('Error fetching user profile:', err);
+        setError('Failed to load user profile: ' + (err instanceof Error ? err.message : String(err)));
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    // Check if auth is initialized before fetching
+    if (auth) {
+      fetchUserProfile();
+    } else {
+      console.error('Firebase auth not initialized');
+      setError('Authentication service not available');
+      setLoading(false);
+    }
+  }, []);
+  
+  // Handle animation and keyboard events
+  useEffect(() => {
+    // Trigger slide-in animation
+    const timer = setTimeout(() => {
+      if (modalRef.current) {
+        console.log('Animating modal in');
+        modalRef.current.classList.remove('translate-x-full');
+        modalRef.current.classList.add('translate-x-0');
+      } else {
+        console.warn('Modal ref is null, cannot animate');
+      }
+    }, 50); // Slightly longer delay to ensure DOM is ready
+    
+    // Add event listener to handle escape key
+    const handleEscKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        handleClose();
+      }
+    };
+    
+    window.addEventListener('keydown', handleEscKey);
+
+    return () => {
+      window.removeEventListener('keydown', handleEscKey);
+      clearTimeout(timer);
+    };
+  }, []);
+
+  // Handle close with animation
+  const handleClose = () => {
+    if (modalRef.current) {
+      // Trigger slide-out animation
+      modalRef.current.classList.remove('translate-x-0');
+      modalRef.current.classList.add('translate-x-full');
+
+      // Wait for animation to complete before closing
+      setTimeout(() => {
+        onClose();
+      }, 300);
+    } else {
+      onClose();
+    }
+  };
+
+  const handleUpdateProfile = async () => {
+    if (!auth.currentUser || !userProfile) return;
+
+    try {
+      await updateUserProfile(auth.currentUser.uid, { bio });
+      setUserProfile(prev => prev ? { ...prev, bio } : null);
+      setEditMode(false);
+    } catch (err) {
+      console.error('Error updating profile:', err);
+      setError('Failed to update profile');
+    }
+  };
+
   return (
-    <div className="h-full flex flex-col bg-[#f0f0f0]">
-      <div className="flex justify-between items-center h-[60px] px-4 bg-med-green">
-        <div className="flex items-center">
-          <button 
-            onClick={onClose}
-            className="text-dark-grey hover:text-black mr-3"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" />
-            </svg>
-          </button>
-          <h2 className="text-xl font-medium text-dark-grey">My Profile</h2>
-        </div>
-        <div className="flex space-x-4">
-          <button className="text-dark-grey hover:text-black">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-            </svg>
-          </button>
-        </div>
-      </div>
-      
-      <div className="flex flex-col items-center p-6 space-y-4">
-        <div className="relative">
-          <IoPerson size={100} color="#4CAF50" className="rounded-full bg-light-green p-2" />
-          <button className="absolute bottom-0 right-0 bg-med-green text-white rounded-full p-1 hover:bg-dark-green">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
-            </svg>
-          </button>
-        </div>
-        <h3 className="text-xl font-semibold text-dark-grey">{username}</h3>
-        {email && <p className="text-gray-500">{email}</p>}
-      </div>
-      
-      <div className="flex-1 p-4">
-        <div className="mb-6">
-          <h4 className="text-lg font-medium mb-2 text-dark-grey">Account Information</h4>
-          <div className="bg-white rounded-lg p-4 shadow-sm">
-            <div className="flex justify-between items-center py-2 border-b border-gray-100">
-              <span className="text-gray-600">Username</span>
-              <span className="font-medium text-dark-grey">{username}</span>
-            </div>
-            <div className="flex justify-between items-center py-2 border-b border-gray-100">
-              <span className="text-gray-600">Email</span>
-              <span className="font-medium text-dark-grey">{email || 'Not provided'}</span>
-            </div>
-            <div className="flex justify-between items-center py-2">
-              <span className="text-gray-600">Account Created</span>
-              <span className="font-medium text-dark-grey">{new Date().toLocaleDateString()}</span>
-            </div>
+    <div
+      className="fixed inset-0 z-50 flex justify-end bg-black bg-opacity-50 md:bg-opacity-30"
+      onClick={handleClose}
+    >
+      <div
+        ref={modalRef}
+        className="w-full h-full md:w-[400px] bg-[#f0f0f0] dark:bg-zinc-800 transform translate-x-full transition-transform duration-300 ease-in-out flex flex-col overflow-auto"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex justify-between items-center h-[60px] px-4 bg-med-green">
+          <div className="flex items-center">
+            <button onClick={handleClose} className="text-white hover:text-gray-200 mr-3">
+              <IoClose size={24} />
+            </button>
+            <h2 className="text-xl font-medium text-white">My Profile</h2>
           </div>
         </div>
-        
-        <div className="mb-6">
-          <h4 className="text-lg font-medium mb-2 text-dark-grey">Privacy</h4>
-          <div className="bg-white rounded-lg p-4 shadow-sm space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="text-gray-600">Show online status</span>
-              <label className="relative inline-flex items-center cursor-pointer">
-                <input type="checkbox" className="sr-only peer" defaultChecked />
-                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-med-green"></div>
-              </label>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-gray-600">Allow friend requests</span>
-              <label className="relative inline-flex items-center cursor-pointer">
-                <input type="checkbox" className="sr-only peer" defaultChecked />
-                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-med-green"></div>
-              </label>
+        {loading ? (
+          <div className="flex-1 flex items-center justify-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-med-green"></div>
+          </div>
+        ) : error ? (
+          <div className="flex-1 flex items-center justify-center p-4">
+            <div className="text-red-500 text-center">
+              <p>{error}</p>
+              <button onClick={onClose} className="mt-4 px-4 py-2 bg-med-green text-white rounded hover:bg-dark-green transition-colors">
+                Close
+              </button>
             </div>
           </div>
+        ) : userProfile ? (
+        <>
+          <div className="flex flex-col items-center p-6 space-y-4">
+            <div className="relative">
+              {userProfile.photoURL ? (
+                <img src={userProfile.photoURL} alt={userProfile.username} className="w-24 h-24 rounded-full object-cover" />
+              ) : (
+                <div className="w-24 h-24 rounded-full bg-med-green flex items-center justify-center text-white text-3xl">
+                  {userProfile.username.charAt(0).toUpperCase()}
+                </div>
+              )}
+              <button className="absolute bottom-0 right-0 bg-med-green text-white rounded-full p-1 hover:bg-dark-green">
+                <IoCamera size={18} />
+              </button>
+            </div>
+            <h3 className="text-xl font-semibold text-dark-grey dark:text-white">{userProfile.username}</h3>
+            <p className="text-gray-500 dark:text-gray-400">{userProfile.email}</p>
+          </div>
+          
+
+          <div className="flex-1 p-4">
+            <div className="mb-6">
+              <h4 className="text-lg font-medium mb-2 text-dark-grey dark:text-white">Account Information</h4>
+              <div className="bg-white dark:bg-zinc-700 rounded-lg p-4 shadow-sm">
+                <div className="mb-4">
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Username</p>
+                  <p className="font-medium text-dark-grey dark:text-white">{userProfile.username}</p>
+                </div>
+                <div className="mb-4">
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Email</p>
+                  <p className="font-medium text-dark-grey dark:text-white">{userProfile.email}</p>
+                </div>
+                {userProfile.createdAt && (
+                  <div>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Account Created</p>
+                    <p className="font-medium text-dark-grey dark:text-white">
+                      {typeof userProfile.createdAt === 'object' && 'seconds' in userProfile.createdAt
+                        ? new Date((userProfile.createdAt as any).seconds * 1000).toLocaleDateString()
+                        : new Date(userProfile.createdAt as any).toLocaleDateString()}
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="mb-6">
+              <h4 className="text-lg font-medium mb-2 text-dark-grey dark:text-white">Bio</h4>
+              <div className="bg-white dark:bg-zinc-700 rounded-lg p-4 shadow-sm">
+                {editMode ? (
+                  <div>
+                    <textarea
+                      value={bio}
+                      onChange={(e) => setBio(e.target.value)}
+                      className="w-full p-2 border border-gray-300 dark:border-zinc-600 rounded-md focus:outline-none focus:ring-2 focus:ring-med-green dark:bg-zinc-800 dark:text-white"
+                      rows={4}
+                      placeholder="Tell others about yourself..."
+                    />
+                    <div className="flex justify-end mt-2 space-x-2">
+                      <button
+                        onClick={() => {
+                          setBio(userProfile.bio || '');
+                          setEditMode(false);
+                        }}
+                        className="px-3 py-1 bg-gray-200 dark:bg-zinc-600 text-gray-800 dark:text-white rounded"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        onClick={handleUpdateProfile}
+                        className="px-3 py-1 bg-med-green text-white rounded hover:bg-dark-green"
+                      >
+                        Save
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-gray-800 dark:text-gray-300">
+                    {userProfile.bio || 'No bio provided yet.'}
+                  </p>
+                )}
+              </div>
+            </div>
+
+            <div className="mb-6">
+              <h4 className="text-lg font-medium mb-2 text-dark-grey dark:text-white">Privacy Settings</h4>
+              <div className="bg-white dark:bg-zinc-700 rounded-lg p-4 shadow-sm">
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <p className="font-medium text-dark-grey dark:text-white">Show Online Status</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">Allow others to see when you're online</p>
+                  </div>
+                  <div className="relative inline-block w-12 align-middle select-none">
+                    <input 
+                      type="checkbox" 
+                      name="toggle" 
+                      id="toggle" 
+                      className="sr-only" 
+                    />
+                    <label 
+                      htmlFor="toggle" 
+                      className="block overflow-hidden h-6 rounded-full bg-gray-300 dark:bg-zinc-600 cursor-pointer"
+                    >
+                      <span 
+                        className={`absolute block w-6 h-6 rounded-full bg-white border-4 border-gray-300 dark:border-zinc-600 appearance-none cursor-pointer transform transition-transform duration-200 ease-in-out`}
+                      ></span>
+                    </label>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="font-medium text-dark-grey dark:text-white">Allow Friend Requests</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">Receive friend requests from other users</p>
+                  </div>
+                  <div className="relative inline-block w-12 align-middle select-none">
+                    <input 
+                      type="checkbox" 
+                      name="toggle2" 
+                      id="toggle2" 
+                      className="sr-only" 
+                      defaultChecked 
+                    />
+                    <label 
+                      htmlFor="toggle2" 
+                      className="block overflow-hidden h-6 rounded-full bg-gray-300 dark:bg-zinc-600 cursor-pointer"
+                    >
+                      <span 
+                        className={`absolute block w-6 h-6 rounded-full bg-white border-4 border-gray-300 dark:border-zinc-600 appearance-none cursor-pointer transform transition-transform duration-200 ease-in-out`}
+                      ></span>
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </>
+      ) : (
+        <div className="flex-1 flex items-center justify-center">
+          <p className="text-gray-500 dark:text-gray-400">User not found</p>
         </div>
-        
-        <div>
-          <button className="w-full py-2 px-4 bg-red-500 text-white rounded hover:bg-red-600 transition-colors">
-            Sign Out
-          </button>
-        </div>
-      </div>
+      )}
+    </div>
     </div>
   );
 };

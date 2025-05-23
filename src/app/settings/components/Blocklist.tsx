@@ -25,18 +25,18 @@ const Blocklist: React.FC = () => {
   };
 
   return (
-    <div className="w-full h-full bg-gray-200 dark:bg-dark-grey rounded-lg p-6">
+    <div className="w-full h-full bg-gray-200 dark:bg-zinc-900 rounded-lg p-6">
       <h1 className="text-4xl font-semibold text-gray-700 dark:text-white mb-8">Blocked Users</h1>
       
-      <div className="bg-white dark:bg-zinc-700 rounded-lg shadow-sm overflow-hidden">
+      <div className="bg-white dark:bg-zinc-800 rounded-lg shadow-sm overflow-hidden">
         {blockedUsers.length > 0 ? (
-          <ul className="divide-y divide-gray-200 dark:divide-gray-600">
+          <ul className="divide-y divide-gray-200 dark:divide-gray-700">
             {blockedUsers.map((user) => (
               <li key={user.id} className="p-4">
                 <div className="flex justify-between items-center">
                   <div className="flex items-center space-x-3">
                     <div className="flex-shrink-0">
-                      <IoPerson size={40} className="text-gray-500 dark:text-gray-400" />
+                      <IoPerson size={40} className="text-gray-500 dark:text-gray-300" />
                     </div>
                     <div>
                       <h3 className="text-lg font-medium text-gray-800 dark:text-white">{user.username}</h3>

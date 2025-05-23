@@ -263,23 +263,11 @@ export default function ExplorePage() {
       
       {/* Modals */}
       {showSettingsModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg w-full max-w-2xl h-[80vh] overflow-hidden">
-            <SettingsModal onClose={() => setShowSettingsModal(false)} />
-          </div>
-        </div>
+        <SettingsModal onClose={() => setShowSettingsModal(false)} />
       )}
       
       {showUserProfileModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg w-full max-w-md overflow-hidden">
-            <UserProfileModal 
-              username={authUser || 'User'} 
-              email="user@example.com"
-              onClose={() => setShowUserProfileModal(false)} 
-            />
-          </div>
-        </div>
+        <UserProfileModal onClose={() => setShowUserProfileModal(false)} />
       )}
       
       {showNotifications && (

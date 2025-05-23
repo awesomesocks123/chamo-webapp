@@ -39,12 +39,12 @@ const Help: React.FC = () => {
   };
 
   return (
-    <div className="w-full h-full bg-gray-200 dark:bg-dark-grey rounded-lg p-6">
+    <div className="w-full h-full bg-gray-200 dark:bg-zinc-900 rounded-lg p-6">
       <div className="text-4xl font-semibold text-gray-700 dark:text-white mb-6">
         Help Request
       </div>
       <textarea
-        className="w-full h-64 p-4 bg-gray-100 dark:bg-zinc-700 border border-transparent dark:border-gray-500 rounded-md text-gray-700 dark:text-white resize-none focus:outline-none focus:ring-2 focus:ring-med-green"
+        className="w-full h-64 p-4 bg-gray-100 dark:bg-zinc-800 border border-transparent dark:border-gray-600 rounded-md text-gray-700 dark:text-gray-200 resize-none focus:outline-none focus:ring-2 focus:ring-med-green"
         placeholder="Tell us about a problem..."
         onChange={handleInputChanges}
         value={textAreaValue}

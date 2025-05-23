@@ -4,10 +4,10 @@ import React from 'react';
 
 const PrivacyPolicy: React.FC = () => {
   return (
-    <div className="w-full h-full bg-gray-200 dark:bg-dark-grey rounded-lg p-6 overflow-y-auto">
+    <div className="w-full h-full bg-gray-200 dark:bg-zinc-900 rounded-lg p-6 overflow-y-auto">
       <h1 className="text-4xl font-semibold text-gray-700 dark:text-white mb-8">Privacy Policy</h1>
       
-      <div className="space-y-6 text-gray-700 dark:text-gray-300">
+      <div className="space-y-6 text-gray-700 dark:text-gray-200">
         <section>
           <h2 className="text-2xl font-semibold text-gray-800 dark:text-white mb-4">Introduction</h2>
           <p className="mb-4">

@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { IoArrowBack } from 'react-icons/io5';
 import { useRouter } from 'next/navigation';
+import DarkModeToggle from './DarkModeToggle';
 
 interface SettingsModalProps {
   onClose: () => void;
@@ -8,12 +9,62 @@ interface SettingsModalProps {
 
 const SettingsModal: React.FC<SettingsModalProps> = ({ onClose }) => {
   const router = useRouter();
+  const modalRef = useRef<HTMLDivElement>(null);
+  
+  // Handle animation and keyboard events
+  useEffect(() => {
+    // Trigger slide-in animation
+    const timer = setTimeout(() => {
+      if (modalRef.current) {
+        console.log('Animating settings modal in');
+        modalRef.current.classList.remove('translate-x-full');
+        modalRef.current.classList.add('translate-x-0');
+      } else {
+        console.warn('Settings modal ref is null, cannot animate');
+      }
+    }, 50); // Slightly longer delay to ensure DOM is ready
+    
+    // Add event listener to handle escape key
+    const handleEscKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        handleClose();
+      }
+    };
+    
+    window.addEventListener('keydown', handleEscKey);
+    
+    return () => {
+      window.removeEventListener('keydown', handleEscKey);
+      clearTimeout(timer);
+    };
+  }, []);
+  
+  const handleClose = () => {
+    if (modalRef.current) {
+      // Trigger slide-out animation
+      modalRef.current.classList.remove('translate-x-0');
+      modalRef.current.classList.add('translate-x-full');
+
+      // Wait for animation to complete before closing
+      setTimeout(() => {
+        onClose();
+      }, 300);
+    } else {
+      onClose();
+    }
+  };
+  
   return (
-    <div className="h-full flex flex-col bg-[#f0f0f0]">
+    <div className="fixed inset-0 z-50 flex justify-end bg-black bg-opacity-50 md:bg-opacity-30" onClick={handleClose}>
+      <div 
+        ref={modalRef}
+        className="w-full h-full md:w-[400px] bg-[#f0f0f0] dark:bg-zinc-800 transform translate-x-full transition-transform duration-300 ease-in-out flex flex-col overflow-auto"
+        onClick={(e) => e.stopPropagation()}
+      >
       <div className="flex justify-between items-center h-[60px] px-4 bg-med-green">
         <div className="flex items-center">
           <button 
-            onClick={onClose}
+            onClick={handleClose}
             className="text-dark-grey hover:text-black mr-3"
           >
             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
@@ -44,12 +95,9 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ onClose }) => {
             <div className="p-4 bg-white rounded-lg shadow-sm">
               <h4 className="font-medium text-dark-grey mb-2">Appearance</h4>
               <p className="text-gray-600 text-sm">Customize the look and feel of the application.</p>
-              <div className="mt-2 flex items-center">
-                <span className="mr-2 text-gray-600 text-sm">Dark Mode</span>
-                <label className="relative inline-flex items-center cursor-pointer">
-                  <input type="checkbox" className="sr-only peer" />
-                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-med-green"></div>
-                </label>
+              <div className="flex items-center justify-between mb-4">
+                <span className="text-gray-700 dark:text-gray-300">Dark Mode</span>
+                <DarkModeToggle />
               </div>
             </div>
           </div>
@@ -96,6 +144,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ onClose }) => {
             </div>
           </div>
         </div>
+      </div>
       </div>
     </div>
   );

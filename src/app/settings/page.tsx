@@ -9,6 +9,7 @@ import FAQ from './components/FAQ';
 import Blocklist from './components/Blocklist';
 import PrivacyPolicy from './components/PrivacyPolicy';
 import ProfileMenu from './components/ProfileMenu';
+import FriendsList from '../components/FriendsList';
 
 export default function SettingsPage() {
   const { authUser, setAuthUser } = useContext(AuthContext);
@@ -83,38 +84,44 @@ export default function SettingsPage() {
         onSignOut={handleSignOut}
       />
 
-      <div className="flex-1 bg-[#f7fee7] overflow-hidden">
+      <div className="flex-1 bg-[#f7fee7] dark:bg-[#191919] overflow-hidden">
         <div className="flex h-full">
           {/* Sidebar */}
-          <div className="w-1/4 bg-gray-100 dark:bg-zinc-700 p-8 h-full">
-            <h1 className="text-dark-grey dark:text-slate-200 text-4xl font-bold mb-8">Settings</h1>
+          <div className="w-1/4 bg-gray-100 dark:bg-zinc-800 p-8 h-full">
+            <h1 className="text-dark-grey dark:text-white text-4xl font-bold mb-8">Settings</h1>
             <nav className="space-y-2">
               <button 
-                className={`block w-full text-left py-3 px-4 rounded-md font-medium ${activeComponent === 'profile' ? 'bg-med-green text-white' : 'text-dark-grey hover:bg-gray-200'}`}
+                className={`block w-full text-left py-3 px-4 rounded-md font-medium ${activeComponent === 'profile' ? 'bg-med-green text-white dark:bg-dark-green' : 'text-dark-grey dark:text-white hover:bg-gray-200 dark:hover:bg-zinc-700'}`}
                 onClick={() => handleNavClick('profile')}
               >
                 Profile Menu
               </button>
               <button 
-                className={`block w-full text-left py-3 px-4 rounded-md font-medium ${activeComponent === 'help' ? 'bg-med-green text-white' : 'text-dark-grey hover:bg-gray-200'}`}
+                className={`block w-full text-left py-3 px-4 rounded-md font-medium ${activeComponent === 'friends' ? 'bg-med-green text-white dark:bg-dark-green' : 'text-dark-grey dark:text-white hover:bg-gray-200 dark:hover:bg-zinc-700'}`}
+                onClick={() => handleNavClick('friends')}
+              >
+                Friends
+              </button>
+              <button 
+                className={`block w-full text-left py-3 px-4 rounded-md font-medium ${activeComponent === 'help' ? 'bg-med-green text-white dark:bg-dark-green' : 'text-dark-grey dark:text-white hover:bg-gray-200 dark:hover:bg-zinc-700'}`}
                 onClick={() => handleNavClick('help')}
               >
                 Help
               </button>
               <button 
-                className={`block w-full text-left py-3 px-4 rounded-md font-medium ${activeComponent === 'faq' ? 'bg-med-green text-white' : 'text-dark-grey hover:bg-gray-200'}`}
+                className={`block w-full text-left py-3 px-4 rounded-md font-medium ${activeComponent === 'faq' ? 'bg-med-green text-white dark:bg-dark-green' : 'text-dark-grey dark:text-white hover:bg-gray-200 dark:hover:bg-zinc-700'}`}
                 onClick={() => handleNavClick('faq')}
               >
                 FAQ
               </button>
               <button 
-                className={`block w-full text-left py-3 px-4 rounded-md font-medium ${activeComponent === 'blocklist' ? 'bg-med-green text-white' : 'text-dark-grey hover:bg-gray-200'}`}
+                className={`block w-full text-left py-3 px-4 rounded-md font-medium ${activeComponent === 'blocklist' ? 'bg-med-green text-white dark:bg-dark-green' : 'text-dark-grey dark:text-white hover:bg-gray-200 dark:hover:bg-zinc-700'}`}
                 onClick={() => handleNavClick('blocklist')}
               >
                 Blocklist
               </button>
               <button 
-                className={`block w-full text-left py-3 px-4 rounded-md font-medium ${activeComponent === 'privacy' ? 'bg-med-green text-white' : 'text-dark-grey hover:bg-gray-200'}`}
+                className={`block w-full text-left py-3 px-4 rounded-md font-medium ${activeComponent === 'privacy' ? 'bg-med-green text-white dark:bg-dark-green' : 'text-dark-grey dark:text-white hover:bg-gray-200 dark:hover:bg-zinc-700'}`}
                 onClick={() => handleNavClick('privacy')}
               >
                 Privacy
@@ -123,9 +130,10 @@ export default function SettingsPage() {
           </div>
           
           {/* Content Area */}
-          <div className="w-3/4 h-full overflow-y-auto bg-gray-200 dark:bg-dark-grey p-8 rounded-tl-lg rounded-bl-lg">
+          <div className="w-3/4 h-full overflow-y-auto bg-gray-200 dark:bg-zinc-900 p-8 rounded-tl-lg rounded-bl-lg">
             {activeComponent === 'help' && <Help />}
             {activeComponent === 'profile' && <ProfileMenu />}
+            {activeComponent === 'friends' && <FriendsList />}
             {activeComponent === 'faq' && <FAQ />}
             {activeComponent === 'blocklist' && <Blocklist />}
             {activeComponent === 'privacy' && <PrivacyPolicy />}

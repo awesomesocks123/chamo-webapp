@@ -113,12 +113,22 @@ export default function Home() {
                     gap: '15px',
                     width: '310px'
                 }}>
-                    <h1 style={{
-                        fontWeight: 800,
-                        fontSize: '64px',
-                        marginBottom: '70px',
-                        marginTop: '-75px'
-                    }}>Chamo</h1>
+                    <Link 
+                        href="/explore"
+                        style={{
+                            fontWeight: 800,
+                            fontSize: '64px',
+                            marginBottom: '70px',
+                            marginTop: '-75px',
+                            textDecoration: 'none',
+                            color: 'var(--dark-green)',
+                            cursor: 'pointer'
+                        }}
+                        onMouseOver={(e) => e.currentTarget.style.opacity = '0.8'}
+                        onMouseOut={(e) => e.currentTarget.style.opacity = '1'}
+                    >
+                        Chamo
+                    </Link>
                     
                     {errorMessage && (
                         <p style={{ color: 'red', margin: '-8px 0' }}>{errorMessage}</p>
