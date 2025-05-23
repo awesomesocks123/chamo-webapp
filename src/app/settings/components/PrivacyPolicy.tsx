@@ -7,83 +7,105 @@ const PrivacyPolicy: React.FC = () => {
     <div className="w-full h-full bg-gray-200 dark:bg-zinc-900 rounded-lg p-6 overflow-y-auto">
       <h1 className="text-4xl font-semibold text-gray-700 dark:text-white mb-8">Privacy Policy</h1>
       
-      <div className="space-y-6 text-gray-700 dark:text-gray-200">
-        <section>
-          <h2 className="text-2xl font-semibold text-gray-800 dark:text-white mb-4">Introduction</h2>
-          <p className="mb-4">
-            At Chamo Chat, we take your privacy seriously. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our chat application.
-          </p>
-          <p>
-            Please read this privacy policy carefully. If you do not agree with the terms of this privacy policy, please do not access the application.
+      <div className="space-y-8 text-gray-700 dark:text-gray-200">
+        <section id="overview">
+          <h2 className="text-2xl font-semibold text-gray-800 dark:text-white mb-3">Overview</h2>
+          <p className="text-gray-600 dark:text-gray-400 mb-4">
+            This is our privacy policy which outlines what information we collect, why we collect it, and how we use it to give you the best experience on our app.
           </p>
         </section>
 
-        <section>
-          <h2 className="text-2xl font-semibold text-gray-800 dark:text-white mb-4">Collection of Your Information</h2>
-          <p className="mb-4">
-            We may collect information about you in a variety of ways. The information we may collect via the Application includes:
+        <section id="collect">
+          <h2 className="text-2xl font-semibold text-gray-800 dark:text-white mb-3">What We Collect</h2>
+          <p className="text-gray-600 dark:text-gray-400 mb-4">
+            We collect information, including info you choose to share with us and info while you're using our app.
           </p>
-          <ul className="list-disc pl-6 space-y-2">
-            <li><strong>Personal Data:</strong> Personally identifiable information, such as your name, email address, and profile information that you voluntarily give to us when you register with the Application.</li>
-            <li><strong>Derivative Data:</strong> Information our servers automatically collect when you access the Application, such as your IP address, browser type, operating system, access times, and the pages you have viewed.</li>
-            <li><strong>Mobile Device Data:</strong> Device information, such as your mobile device ID, model, and manufacturer, and information about the location of your device, if you access the Application from a mobile device.</li>
-            <li><strong>Chat Data:</strong> Messages, media, and other content you share through our platform.</li>
-          </ul>
+          
+          <div className="space-y-4 ml-2">
+            <div id="collect---info-shared">
+              <h3 className="text-xl font-medium text-gray-800 dark:text-white mb-2">Info You Share</h3>
+              <p className="mb-4">
+                We collect the information that you share with us when creating an account. Account creation includes providing us with your first, last name, and email address.
+                When you've created an account, you're able to customize your profile by adding a profile picture, biography, and custom tags.
+                We record this information that you share with us, including your profile biography, any profile pictures uploaded, and any tags you've added to your profile.
+              </p>
+            </div>
+            
+            <div id="collect---info-app">
+              <h3 className="text-xl font-medium text-gray-800 dark:text-white mb-2">Info When Using the App</h3>
+              <p className="mb-4">
+                We also collect information needed to use the app and its features. Chamo is primarily a messaging app, so of course, we collect and store information on the 
+                chats you've joined, including the user who you've joined the chat with. When you create a new chat with a user, we collect information about that chat, 
+                including the user you're paired with. We collect information about your interactions in the chatroom, including its messages and the timestamps of those 
+                messages.
+              </p>
+              <p className="mb-4">
+                When using Chamo's messaging feature, you have the ability to send friend requests to users you've chatted with. We collect information on the friends 
+                you've added from the chats you created, as well as the list of your friends. We collect information about your browsing session, including the timestamp of 
+                your current login session.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <section id="use">
+          <h2 className="text-2xl font-semibold text-gray-800 dark:text-white mb-3">How We Use It</h2>
+          <p className="text-gray-600 dark:text-gray-400 mb-4">
+            We collect information about you for many reasons, including maintaining the operability of the app, maintaining its safety and security, and communicating with you.
+          </p>
+          
+          <div className="space-y-4 ml-2">
+            <div id="use---operate">
+              <h3 className="text-xl font-medium text-gray-800 dark:text-white mb-2">To operate the app</h3>
+              <p className="mb-4">
+                We collect information in order to provide you with our services and allow you to use our app's features. For example, Chamo's messaging capability is one of its core features. For this feature to function, we collect and record messages and their timestamps so that you can chat with fellow users and read your chat history.
+              </p>
+            </div>
+            
+            <div id="use---safety">
+              <h3 className="text-xl font-medium text-gray-800 dark:text-white mb-2">To maintain safety and security</h3>
+              <p className="mb-4">
+                We also collect information to maintain the safety and security of your account and our app. For example, during the account creation process, ensuring the legitimacy of an email address is important! We collect your email address so that we can verify that the email entered is usable, which is important for managing your account as well as communicating with you!
+              </p>
+              <p className="mb-4">
+                To ensure our users abide by our terms of service, we collect information about your messages to ensure it abides by our safety filter. 
+                We collect information about your browsing session so that your sessions time out when you've been inactive for too long.
+              </p>
+            </div>
+            
+            <div id="use---communicate">
+              <h3 className="text-xl font-medium text-gray-800 dark:text-white mb-2">To communicate with you</h3>
+              <p className="mb-4">
+                We also use the email you provided us with to communicate with you regarding any help or customer service requests. This includes things like responding to any help requests or reports.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <section id="disclose">
+          <h2 className="text-2xl font-semibold text-gray-800 dark:text-white mb-3">How we disclose your information</h2>
+          <p className="text-gray-600 dark:text-gray-400 mb-4">
+            We don't disclose your information.
+          </p>
+          
+          <div className="space-y-4 ml-2">
+            <div id="disclose---does-not">
+              <h3 className="text-xl font-medium text-gray-800 dark:text-white mb-2">Chamo doesn't.</h3>
+              <p className="mb-4">
+                Only our development team has access to your information strictly for development purposes. Chamo doesn't sell or disclose your information to third-parties.
+              </p>
+            </div>
+          </div>
         </section>
 
         <section>
-          <h2 className="text-2xl font-semibold text-gray-800 dark:text-white mb-4">Use of Your Information</h2>
+          <h2 className="text-2xl font-semibold text-gray-800 dark:text-white mb-3">Contact Us</h2>
           <p className="mb-4">
-            Having accurate information about you permits us to provide you with a smooth, efficient, and customized experience. Specifically, we may use information collected about you via the Application to:
-          </p>
-          <ul className="list-disc pl-6 space-y-2">
-            <li>Create and manage your account.</li>
-            <li>Deliver targeted advertising, newsletters, and other information regarding promotions to you.</li>
-            <li>Email you regarding your account or order.</li>
-            <li>Enable user-to-user communications.</li>
-            <li>Generate a personal profile about you to make future visits to the Application more personalized.</li>
-            <li>Increase the efficiency and operation of the Application.</li>
-            <li>Monitor and analyze usage and trends to improve your experience with the Application.</li>
-            <li>Notify you of updates to the Application.</li>
-            <li>Prevent fraudulent transactions, monitor against theft, and protect against criminal activity.</li>
-            <li>Process payments and refunds.</li>
-            <li>Request feedback and contact you about your use of the Application.</li>
-            <li>Resolve disputes and troubleshoot problems.</li>
-            <li>Respond to product and customer service requests.</li>
-          </ul>
-        </section>
-
-        <section>
-          <h2 className="text-2xl font-semibold text-gray-800 dark:text-white mb-4">Disclosure of Your Information</h2>
-          <p className="mb-4">
-            We may share information we have collected about you in certain situations. Your information may be disclosed as follows:
-          </p>
-          <ul className="list-disc pl-6 space-y-2">
-            <li><strong>By Law or to Protect Rights:</strong> If we believe the release of information about you is necessary to respond to legal process, to investigate or remedy potential violations of our policies, or to protect the rights, property, and safety of others, we may share your information as permitted or required by any applicable law, rule, or regulation.</li>
-            <li><strong>Third-Party Service Providers:</strong> We may share your information with third parties that perform services for us or on our behalf, including payment processing, data analysis, email delivery, hosting services, customer service, and marketing assistance.</li>
-            <li><strong>Marketing Communications:</strong> With your consent, or with an opportunity for you to withdraw consent, we may share your information with third parties for marketing purposes.</li>
-            <li><strong>Interactions with Other Users:</strong> If you interact with other users of the Application, those users may see your name, profile photo, and descriptions of your activity.</li>
-            <li><strong>Online Postings:</strong> When you post comments, contributions or other content to the Application, your posts may be viewed by all users and may be publicly distributed outside the Application in perpetuity.</li>
-            <li><strong>Business Transfers:</strong> We may share or transfer your information in connection with, or during negotiations of, any merger, sale of company assets, financing, or acquisition of all or a portion of our business to another company.</li>
-          </ul>
-        </section>
-
-        <section>
-          <h2 className="text-2xl font-semibold text-gray-800 dark:text-white mb-4">Security of Your Information</h2>
-          <p className="mb-4">
-            We use administrative, technical, and physical security measures to help protect your personal information. While we have taken reasonable steps to secure the personal information you provide to us, please be aware that despite our efforts, no security measures are perfect or impenetrable, and no method of data transmission can be guaranteed against any interception or other type of misuse.
-          </p>
-        </section>
-
-        <section>
-          <h2 className="text-2xl font-semibold text-gray-800 dark:text-white mb-4">Contact Us</h2>
-          <p>
             If you have questions or comments about this Privacy Policy, please contact us at:
           </p>
           <p className="mt-2 font-medium">
             Chamo Chat<br />
-            Email: privacy@chamochat.com<br />
-            Phone: (555) 123-4567
+            Email: privacy@chamochat.com
           </p>
         </section>
       </div>

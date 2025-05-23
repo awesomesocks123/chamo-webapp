@@ -96,6 +96,10 @@ export default function ChatPage() {
         // Show settings modal
         setShowSettingsModal(true);
         break;
+      case 'notifications':
+        // Toggle notifications panel
+        setShowNotifications(!showNotifications);
+        break;
       case 'search':
         // Search functionality is handled in the NavBar component
         break;
@@ -133,15 +137,19 @@ export default function ChatPage() {
   return (
     <div className="flex flex-col h-screen bg-[#191919] dark:bg-[#121212]">
       {/* Header/Navbar */}
-      <NavBar
-        onNavButtonClick={handleNavButtonClick}
+      <NavBar 
+        onNavButtonClick={handleNavButtonClick} 
         onSignOut={handleSignOut}
+        onNotificationUpdate={(count) => {
+          // You can use this to update UI elements based on notification count
+          console.log(`Notification count updated: ${count}`);
+        }}
         onSearch={handleUserSearch}
       />
 
       {/* Friend Selection Modal for new chats */}
       {showFriendsModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white dark:bg-zinc-800 rounded-lg w-full max-w-md max-h-[80vh] overflow-hidden">
             <div className="p-4 border-b border-gray-200 dark:border-zinc-700 flex justify-between items-center">
               <h2 className="text-xl font-semibold text-gray-800 dark:text-white">Start New Chat</h2>
@@ -225,7 +233,13 @@ export default function ChatPage() {
       
       {/* Notifications Panel */}
       {showNotifications && (
-        <NotificationsPanel onClose={() => setShowNotifications(false)} />
+        <NotificationsPanel 
+          onClose={() => setShowNotifications(false)} 
+          onFriendRequestAction={() => {
+            // Refresh friends list when a friend request is accepted or rejected
+            loadFriends();
+          }} 
+        />
       )}
       
       {/* Add Friends Modal */}

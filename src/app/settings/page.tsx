@@ -1,19 +1,21 @@
 'use client';
 
 import React, { useContext, useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { AuthContext } from '../context/AuthProvider';
 import NavBar from '../components/NavBar';
 import Help from './components/Help';
 import FAQ from './components/FAQ';
 import Blocklist from './components/Blocklist';
 import PrivacyPolicy from './components/PrivacyPolicy';
+import TermsOfService from './components/TermsOfService';
 import ProfileMenu from './components/ProfileMenu';
 import FriendsList from '../components/FriendsList';
 
 export default function SettingsPage() {
   const { authUser, setAuthUser } = useContext(AuthContext);
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [isLoading, setIsLoading] = useState(true);
   const [activeComponent, setActiveComponent] = useState('help'); // Initial active component
   
@@ -29,8 +31,14 @@ export default function SettingsPage() {
       router.replace('/auth/login');
     } else {
       setIsLoading(false);
+      
+      // Check for tab parameter in URL
+      const tab = searchParams.get('tab');
+      if (tab && ['help', 'profile', 'friends', 'faq', 'blocklist', 'privacy', 'terms'].includes(tab)) {
+        setActiveComponent(tab);
+      }
     }
-  }, [authUser, router]);
+  }, [authUser, router, searchParams]);
 
   const handleSignOut = () => {
     // Clear the auth user from context
@@ -88,43 +96,49 @@ export default function SettingsPage() {
         <div className="flex h-full">
           {/* Sidebar */}
           <div className="w-1/4 bg-gray-100 dark:bg-zinc-800 p-8 h-full">
-            <h1 className="text-dark-grey dark:text-white text-4xl font-bold mb-8">Settings</h1>
+            <h1 className="text-gray-800 dark:text-white text-4xl font-bold mb-8">Settings</h1>
             <nav className="space-y-2">
               <button 
-                className={`block w-full text-left py-3 px-4 rounded-md font-medium ${activeComponent === 'profile' ? 'bg-med-green text-white dark:bg-dark-green' : 'text-dark-grey dark:text-white hover:bg-gray-200 dark:hover:bg-zinc-700'}`}
+                className={`block w-full text-left py-3 px-4 rounded-md font-medium ${activeComponent === 'profile' ? 'bg-med-green text-white dark:bg-dark-green' : 'text-gray-800 dark:text-white hover:bg-gray-200 dark:hover:bg-zinc-700'}`}
                 onClick={() => handleNavClick('profile')}
               >
                 Profile Menu
               </button>
               <button 
-                className={`block w-full text-left py-3 px-4 rounded-md font-medium ${activeComponent === 'friends' ? 'bg-med-green text-white dark:bg-dark-green' : 'text-dark-grey dark:text-white hover:bg-gray-200 dark:hover:bg-zinc-700'}`}
+                className={`block w-full text-left py-3 px-4 rounded-md font-medium ${activeComponent === 'friends' ? 'bg-med-green text-white dark:bg-dark-green' : 'text-gray-800 dark:text-white hover:bg-gray-200 dark:hover:bg-zinc-700'}`}
                 onClick={() => handleNavClick('friends')}
               >
                 Friends
               </button>
               <button 
-                className={`block w-full text-left py-3 px-4 rounded-md font-medium ${activeComponent === 'help' ? 'bg-med-green text-white dark:bg-dark-green' : 'text-dark-grey dark:text-white hover:bg-gray-200 dark:hover:bg-zinc-700'}`}
+                className={`block w-full text-left py-3 px-4 rounded-md font-medium ${activeComponent === 'help' ? 'bg-med-green text-white dark:bg-dark-green' : 'text-gray-800 dark:text-white hover:bg-gray-200 dark:hover:bg-zinc-700'}`}
                 onClick={() => handleNavClick('help')}
               >
                 Help
               </button>
               <button 
-                className={`block w-full text-left py-3 px-4 rounded-md font-medium ${activeComponent === 'faq' ? 'bg-med-green text-white dark:bg-dark-green' : 'text-dark-grey dark:text-white hover:bg-gray-200 dark:hover:bg-zinc-700'}`}
+                className={`block w-full text-left py-3 px-4 rounded-md font-medium ${activeComponent === 'faq' ? 'bg-med-green text-white dark:bg-dark-green' : 'text-gray-800 dark:text-white hover:bg-gray-200 dark:hover:bg-zinc-700'}`}
                 onClick={() => handleNavClick('faq')}
               >
                 FAQ
               </button>
               <button 
-                className={`block w-full text-left py-3 px-4 rounded-md font-medium ${activeComponent === 'blocklist' ? 'bg-med-green text-white dark:bg-dark-green' : 'text-dark-grey dark:text-white hover:bg-gray-200 dark:hover:bg-zinc-700'}`}
+                className={`block w-full text-left py-3 px-4 rounded-md font-medium ${activeComponent === 'blocklist' ? 'bg-med-green text-white dark:bg-dark-green' : 'text-gray-800 dark:text-white hover:bg-gray-200 dark:hover:bg-zinc-700'}`}
                 onClick={() => handleNavClick('blocklist')}
               >
                 Blocklist
               </button>
               <button 
-                className={`block w-full text-left py-3 px-4 rounded-md font-medium ${activeComponent === 'privacy' ? 'bg-med-green text-white dark:bg-dark-green' : 'text-dark-grey dark:text-white hover:bg-gray-200 dark:hover:bg-zinc-700'}`}
+                className={`block w-full text-left py-3 px-4 rounded-md font-medium ${activeComponent === 'privacy' ? 'bg-med-green text-white dark:bg-dark-green' : 'text-gray-800 dark:text-white hover:bg-gray-200 dark:hover:bg-zinc-700'}`}
                 onClick={() => handleNavClick('privacy')}
               >
                 Privacy
+              </button>
+              <button 
+                className={`block w-full text-left py-3 px-4 rounded-md font-medium ${activeComponent === 'terms' ? 'bg-med-green text-white dark:bg-dark-green' : 'text-gray-800 dark:text-white hover:bg-gray-200 dark:hover:bg-zinc-700'}`}
+                onClick={() => handleNavClick('terms')}
+              >
+                Terms of Service
               </button>
             </nav>
           </div>
@@ -137,6 +151,7 @@ export default function SettingsPage() {
             {activeComponent === 'faq' && <FAQ />}
             {activeComponent === 'blocklist' && <Blocklist />}
             {activeComponent === 'privacy' && <PrivacyPolicy />}
+            {activeComponent === 'terms' && <TermsOfService />}
           </div>
         </div>
       </div>

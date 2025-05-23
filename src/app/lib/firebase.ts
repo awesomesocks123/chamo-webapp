@@ -55,6 +55,15 @@ export const signInWithGoogle = async () => {
     const result = await signInWithPopup(auth, googleProvider);
     const user = result.user;
     
+    // Check if the user's email is in the approved list
+    const isApproved = await checkApprovedEmail(user.email);
+    
+    if (!isApproved) {
+      // Sign out the user if not approved
+      await auth.signOut();
+      throw new Error('Access denied. Your email is not on the approved list for this application.');
+    }
+    
     // Create or update user profile in Firestore
     await createUserProfileDocument(user);
     
@@ -62,6 +71,30 @@ export const signInWithGoogle = async () => {
   } catch (error) {
     console.error('Error signing in with Google:', error);
     throw error;
+  }
+};
+
+// Function to check if an email is in the approved list
+export const checkApprovedEmail = async (email: string | null) => {
+  if (!email) return false;
+  
+  try {
+    // Get the approved emails collection
+    const approvedEmailsRef = doc(db, 'access_control', 'approved_emails');
+    const snapshot = await getDoc(approvedEmailsRef);
+    
+    if (snapshot.exists()) {
+      const data = snapshot.data();
+      const approvedEmails = data.emails || [];
+      
+      // Check if the user's email is in the approved list
+      return approvedEmails.includes(email);
+    }
+    
+    return false;
+  } catch (error) {
+    console.error('Error checking approved email:', error);
+    return false;
   }
 };
 

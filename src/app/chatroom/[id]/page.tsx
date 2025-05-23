@@ -11,6 +11,14 @@ import SettingsModal from '../../components/SettingsModal';
 import NotificationsPanel from '../../components/NotificationsPanel';
 import { getChatRoom, ChatRoom as ChatRoomType } from '../../lib/chatRoomService';
 
+// This function is required for static site generation with dynamic routes
+export function generateStaticParams() {
+  // For a school project, we can use a placeholder ID that will be replaced at runtime
+  return [
+    { id: 'placeholder' }
+  ];
+}
+
 export default function ChatRoomPage({ params }: { params: { id: string } }) {
   const { authUser } = useContext(AuthContext);
   const router = useRouter();
