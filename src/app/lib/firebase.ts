@@ -16,6 +16,10 @@ const firebaseConfig = {
   measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID
 };
 
+// Determine if we're in development or production
+const isDevelopment = typeof window !== 'undefined' && 
+  (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+
 // Check if we have the required Firebase config
 const hasValidConfig = !!firebaseConfig.apiKey && firebaseConfig.apiKey !== '';
 
@@ -32,6 +36,32 @@ if (hasValidConfig) {
     auth = getAuth(app);
     db = getFirestore(app);
     googleProvider = new GoogleAuthProvider();
+    
+    // Configure Firestore for production
+    if (typeof window !== 'undefined') {
+      if (!isDevelopment) {
+        console.log('Configuring Firestore for production environment');
+        
+        // Enable offline persistence for Firestore in production
+        // This helps with offline access and improves performance
+        enableIndexedDbPersistence(db)
+          .then(() => {
+            console.log('Firestore persistence enabled successfully');
+          })
+          .catch((err) => {
+            if (err.code === 'failed-precondition') {
+              // Multiple tabs open, persistence can only be enabled in one tab at a time
+              console.warn('Multiple tabs open, persistence only enabled in one tab');
+            } else if (err.code === 'unimplemented') {
+              // The current browser doesn't support persistence
+              console.warn('Current browser does not support persistence');
+            } else {
+              console.error('Error enabling Firestore persistence:', err);
+            }
+          });
+      }
+    }
+    
     console.log('Firebase initialized successfully');
   } catch (error) {
     console.error('Error initializing Firebase:', error);
@@ -47,10 +77,6 @@ if (hasValidConfig) {
   db = {} as ReturnType<typeof getFirestore>;
   googleProvider = {} as GoogleAuthProvider;
 }
-
-// Determine if we're in development or production
-const isDevelopment = typeof window !== 'undefined' && 
-  (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
 
 // Use local emulator for development only if Firebase is properly initialized
 if (isDevelopment && typeof window !== 'undefined' && hasValidConfig) {
@@ -169,10 +195,24 @@ export const createUserProfileDocument = async (user: any) => {
   }
   
   try {
+    console.log(`Creating/updating user profile for ${user.uid} in ${isDevelopment ? 'development' : 'production'}`);
+    
+    // Add a small delay in production to ensure Firestore is ready
+    if (!isDevelopment && typeof window !== 'undefined') {
+      await new Promise(resolve => setTimeout(resolve, 1000));
+    }
+    
     const userRef = doc(db, 'users', user.uid);
     
-    // Check if user document exists
-    const snapshot = await getDoc(userRef);
+    // Check if user document exists with error handling
+    let snapshot;
+    try {
+      snapshot = await getDoc(userRef);
+    } catch (error) {
+      console.error('Error getting user document:', error);
+      // Create a mock snapshot for error recovery
+      snapshot = { exists: () => false } as any;
+    }
     
     // If user doesn't exist in Firestore, create a new document
     if (!snapshot.exists()) {

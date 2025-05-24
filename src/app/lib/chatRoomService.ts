@@ -49,30 +49,57 @@ export interface RoomParticipant {
 
 // Get all chat rooms
 export const getChatRooms = (callback: (rooms: ChatRoom[]) => void) => {
-  const roomsRef = collection(db, 'chatRooms');
-  return onSnapshot(roomsRef, (snapshot) => {
-    // Filter out deleted rooms
-    const rooms = snapshot.docs
-      .filter(doc => !doc.data().deleted) // Skip deleted rooms
-      .map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      })) as ChatRoom[];
+  try {
+    // Check if Firestore is available
+    if (!db) {
+      console.warn('Firestore is not properly initialized. Using empty chat rooms list.');
+      callback([]);
+      return () => {}; // Return empty unsubscribe function
+    }
     
-    // Sort rooms: pinned first, then by creation date (newest first)
-    rooms.sort((a, b) => {
-      // First sort by pinned status
-      if (a.isPinned && !b.isPinned) return -1;
-      if (!a.isPinned && b.isPinned) return 1;
-      
-      // Then sort by creation date (newest first)
-      const dateA = a.createdAt?.toDate?.() || new Date(0);
-      const dateB = b.createdAt?.toDate?.() || new Date(0);
-      return dateB.getTime() - dateA.getTime();
-    });
+    console.log('Fetching chat rooms from Firestore...');
+    const roomsRef = collection(db, 'chatRooms');
     
-    callback(rooms);
-  });
+    // Set up error handling for the snapshot listener
+    const unsubscribe = onSnapshot(
+      roomsRef, 
+      (snapshot) => {
+        console.log(`Received ${snapshot.docs.length} chat rooms from Firestore`);
+        // Filter out deleted rooms
+        const rooms = snapshot.docs
+          .filter(doc => !doc.data().deleted) // Skip deleted rooms
+          .map(doc => ({
+            id: doc.id,
+            ...doc.data()
+          })) as ChatRoom[];
+        
+        // Sort rooms: pinned first, then by creation date (newest first)
+        rooms.sort((a, b) => {
+          // First sort by pinned status
+          if (a.isPinned && !b.isPinned) return -1;
+          if (!a.isPinned && b.isPinned) return 1;
+          
+          // Then sort by creation date (newest first)
+          const dateA = a.createdAt?.toDate?.() || new Date(0);
+          const dateB = b.createdAt?.toDate?.() || new Date(0);
+          return dateB.getTime() - dateA.getTime();
+        });
+        
+        callback(rooms);
+      },
+      (error) => {
+        console.error('Error fetching chat rooms:', error);
+        // Return empty array on error to prevent UI from breaking
+        callback([]);
+      }
+    );
+    
+    return unsubscribe;
+  } catch (error) {
+    console.error('Exception in getChatRooms:', error);
+    callback([]);
+    return () => {}; // Return empty unsubscribe function
+  }
 };
 
 // Get a single chat room
@@ -97,21 +124,55 @@ export const getChatRoom = async (roomId: string): Promise<ChatRoom | null> => {
 // Create a new chat room
 export const createChatRoom = async (roomData: Omit<ChatRoom, 'id' | 'createdAt' | 'activeUsers'>): Promise<string> => {
   try {
-    const roomsRef = collection(db, 'chatRooms');
-    const newRoom = {
-      ...roomData,
-      createdAt: serverTimestamp(),
-      activeUsers: 0,
-      creatorId: auth.currentUser?.uid || null,
-      isPinned: true,
-      isDefault: roomData.isDefault || false
-    };
-    
-    const docRef = await addDoc(roomsRef, newRoom);
-    return docRef.id;
+    // Check if Firestore is available
+    if (!db) {
+      console.error('Firestore is not properly initialized. Cannot create chat room.');
+      throw new Error('Database connection error');
+    }
+
+    console.log('Creating new chat room...');
+    const user = auth.currentUser;
+    if (!user) {
+      console.warn('User not authenticated. Using fallback user ID');
+      // In production, we might want to allow this for testing
+      // Get user ID from localStorage as fallback
+      const fallbackUserId = typeof window !== 'undefined' ? localStorage.getItem('authUser') : null;
+      if (!fallbackUserId) {
+        throw new Error('User must be authenticated to create a chat room');
+      }
+      
+      const roomsRef = collection(db, 'chatRooms');
+      const newRoom = {
+        ...roomData,
+        createdAt: serverTimestamp(),
+        activeUsers: 0,
+        creatorId: fallbackUserId,
+        isPinned: true,
+        isDefault: roomData.isDefault || false
+      };
+
+      const docRef = await addDoc(roomsRef, newRoom);
+      console.log(`Chat room created with ID: ${docRef.id}`);
+      return docRef.id;
+    } else {
+      const roomsRef = collection(db, 'chatRooms');
+      const newRoom = {
+        ...roomData,
+        createdAt: serverTimestamp(),
+        activeUsers: 0,
+        creatorId: user.uid,
+        isPinned: true,
+        isDefault: roomData.isDefault || false
+      };
+
+      const docRef = await addDoc(roomsRef, newRoom);
+      console.log(`Chat room created with ID: ${docRef.id}`);
+      return docRef.id;
+    }
   } catch (error) {
     console.error('Error creating chat room:', error);
-    throw error;
+    // In production, we might want to show a more user-friendly error
+    throw new Error('Failed to create chat room. Please try again later.');
   }
 };
 
