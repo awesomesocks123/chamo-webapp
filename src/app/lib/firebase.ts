@@ -116,6 +116,12 @@ export const signInWithGoogle = async () => {
     const result = await signInWithPopup(auth, googleProvider);
     const user = result.user;
     
+    if (!user) {
+      throw new Error('Authentication failed: No user returned from Firebase');
+    }
+    
+    console.log('User authenticated successfully:', user.uid);
+    
     // In production, we might want to skip the approved email check during initial testing
     // or implement a different approval mechanism
     if (!isDevelopment) {
@@ -134,7 +140,15 @@ export const signInWithGoogle = async () => {
     }
     
     // Create or update user profile in Firestore
-    await createUserProfileDocument(user);
+    // This is critical for the user profile to work properly
+    try {
+      await createUserProfileDocument(user);
+      console.log('User profile created/updated successfully');
+    } catch (profileError) {
+      console.error('Error creating user profile:', profileError);
+      // Continue anyway - we don't want to prevent login if profile creation fails
+      // The profile creation will be attempted again on next login
+    }
     
     return user;
   } catch (error) {
@@ -180,7 +194,11 @@ export const checkApprovedEmail = async (email: string | null) => {
 
 // Helper function to create a user profile document
 export const createUserProfileDocument = async (user: any) => {
-  if (!user) return;
+  if (!user) {
+    console.warn('No user provided to createUserProfileDocument');
+    return;
+  }
+  
   if (!hasValidConfig) {
     console.warn('Firebase is not properly configured. User profile will not be created.');
     return;
@@ -189,70 +207,68 @@ export const createUserProfileDocument = async (user: any) => {
   try {
     console.log(`Creating/updating user profile for ${user.uid} in ${isDevelopment ? 'development' : 'production'}`);
     
-    // In production, we'll use a more optimized approach
-    // No delay needed as it can slow down the process
-    
     // Store user data in localStorage for immediate access
     // This provides instant access to basic user data while Firestore operation completes
     if (typeof window !== 'undefined') {
       try {
-        // Store minimal user data for quick access
+        // Create a more complete user data object for localStorage
         const userData = {
           uid: user.uid,
-          displayName: user.displayName,
-          email: user.email,
-          photoURL: user.photoURL,
-          lastUpdated: new Date().toISOString()
+          username: user.displayName || user.email?.split('@')[0] || 'User',
+          email: user.email || '',
+          photoURL: user.photoURL || '',
+          status: 'online',
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          friends: [],
+          friendRequests: [],
+          sentRequests: []
         };
         localStorage.setItem('userData', JSON.stringify(userData));
+        localStorage.setItem(`userProfile_${user.uid}`, JSON.stringify(userData));
+        console.log('User data stored in localStorage for immediate access');
       } catch (e) {
         console.warn('Could not store user data in localStorage', e);
       }
     }
     
+    // Always create the user document in Firestore, even if we can't check if it exists
+    // This ensures the user profile is created in production
     const userRef = doc(db, 'users', user.uid);
     
-    // Check if user document exists with optimized error handling
-    let snapshot;
+    // Try to get the user document, but don't block on it
+    let userExists = false;
     try {
-      // Use a shorter timeout for Firestore operations in production
-      const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Firestore operation timed out')), 5000)
-      );
-      
-      // Race between the Firestore operation and the timeout
-      snapshot = await Promise.race([
-        getDoc(userRef),
-        timeoutPromise
-      ]) as any;
+      const snapshot = await getDoc(userRef);
+      userExists = snapshot.exists();
     } catch (error) {
-      console.error('Error getting user document:', error);
-      // Create a mock snapshot for error recovery
-      snapshot = { exists: () => false } as any;
+      console.error('Error checking if user document exists:', error);
+      // Continue with profile creation anyway
     }
     
-    // If user doesn't exist in Firestore, create a new document
-    if (!snapshot.exists()) {
+    // If user doesn't exist in Firestore or we couldn't check, create/update the document
+    if (!userExists) {
       const { displayName, email, photoURL, uid } = user;
       const createdAt = new Date();
       
       // Extract username from email or use displayName
-      const username = displayName || email.split('@')[0];
+      const username = displayName || (email ? email.split('@')[0] : 'User');
       
+      // Use setDoc with merge option to ensure it works even if the document already exists
       await setDoc(userRef, {
         uid,
         username,
-        email,
-        photoURL,
+        email: email || '',
+        photoURL: photoURL || '',
         status: 'online',
         friends: [],
         friendRequests: [],
         sentRequests: [],
         createdAt,
         updatedAt: createdAt
-      });
+      }, { merge: true }); // Use merge option to avoid overwriting existing data
       
-      console.log('User profile created successfully');
+      console.log('User profile created/updated successfully');
     } else {
       // Update last login time
       await updateDoc(userRef, {

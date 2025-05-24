@@ -97,23 +97,44 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
     }));
   };
 
-  // Function to get a user profile, first from cache, then from Firestore
+  // Function to get a user profile, with multiple fallback mechanisms
   const getUserProfile = async (userId: string) => {
-    // First check if we have a fresh cached version (less than 5 minutes old)
+    if (!userId) {
+      console.warn('getUserProfile called with no userId');
+      return null;
+    }
+
+    // First check if we have a fresh cached version in memory (less than 5 minutes old)
     const cachedProfile = userProfiles[userId];
     if (cachedProfile && (Date.now() - cachedProfile.cachedAt < 300000)) {
-      console.log(`Using cached profile for user ${userId}`);
+      console.log(`Using in-memory cached profile for user ${userId}`);
       return cachedProfile;
     }
 
-    // If not in cache or cache is stale, try to fetch from Firestore
+    // Next, check localStorage for a cached version
+    if (typeof window !== 'undefined') {
+      try {
+        const localStorageProfile = localStorage.getItem(`userProfile_${userId}`);
+        if (localStorageProfile) {
+          const parsedProfile = JSON.parse(localStorageProfile);
+          console.log(`Using localStorage cached profile for user ${userId}`);
+          // Cache it in memory too
+          setUserProfile(userId, parsedProfile);
+          return parsedProfile;
+        }
+      } catch (e) {
+        console.warn('Error reading profile from localStorage:', e);
+      }
+    }
+
+    // If not in cache, try to fetch from Firestore
     try {
       console.log(`Fetching profile for user ${userId} from Firestore`);
       const userRef = doc(db, 'users', userId);
       
       // Set a timeout for the Firestore operation
       const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Firestore operation timed out')), 5000)
+        setTimeout(() => reject(new Error('Firestore operation timed out')), 8000)
       );
       
       // Race between the Firestore operation and the timeout
@@ -124,8 +145,18 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
 
       if (userSnapshot && userSnapshot.exists()) {
         const userData = userSnapshot.data();
-        // Cache the user profile
+        // Cache the user profile in both memory and localStorage
         setUserProfile(userId, userData);
+        
+        // Also cache in localStorage
+        if (typeof window !== 'undefined') {
+          try {
+            localStorage.setItem(`userProfile_${userId}`, JSON.stringify(userData));
+          } catch (e) {
+            console.warn('Error caching profile in localStorage:', e);
+          }
+        }
+        
         return userData;
       } else if (cachedProfile) {
         // If Firestore fetch failed but we have a cached version, use it
@@ -142,12 +173,35 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       }
     }
 
+    // Check if we have userData in localStorage as a last resort
+    if (typeof window !== 'undefined') {
+      try {
+        const userData = localStorage.getItem('userData');
+        if (userData) {
+          const parsedData = JSON.parse(userData);
+          if (parsedData.uid === userId) {
+            console.log('Using userData from localStorage as fallback');
+            return parsedData;
+          }
+        }
+      } catch (e) {
+        console.warn('Error reading userData from localStorage:', e);
+      }
+    }
+
     // If all else fails, return a default profile
+    console.warn(`No profile found for user ${userId}, using default profile`);
     return {
       uid: userId,
       username: 'Unknown User',
+      email: '',
       photoURL: null,
       status: 'offline',
+      friends: [],
+      friendRequests: [],
+      sentRequests: [],
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
       cachedAt: Date.now()
     };
   };
