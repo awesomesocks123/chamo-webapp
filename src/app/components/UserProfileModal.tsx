@@ -3,7 +3,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { IoPerson, IoClose, IoCamera, IoPencil, IoMail, IoCalendar } from 'react-icons/io5';
 import { auth } from '../lib/firebase';
-import { getUserProfile, updateUserProfile, UserProfile } from '../lib/userService';
+import { updateUserProfile, UserProfile } from '../lib/userService';
+import { useAppData } from '../context/AppDataProvider';
 
 interface UserProfileModalProps {
   onClose: () => void;
@@ -11,7 +12,8 @@ interface UserProfileModalProps {
 
 const UserProfileModal: React.FC<UserProfileModalProps> = ({ onClose }) => {
   const modalRef = useRef<HTMLDivElement>(null);
-  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const { getUserProfile, setUserProfile } = useAppData(); // Use the global AppDataProvider
+  const [localUserProfile, setLocalUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [editMode, setEditMode] = useState<boolean>(false);
@@ -32,11 +34,14 @@ const UserProfileModal: React.FC<UserProfileModalProps> = ({ onClose }) => {
       
       try {
         console.log('Fetching profile for user ID:', auth.currentUser.uid);
+        // Use the getUserProfile from AppDataProvider which has caching built-in
         const profile = await getUserProfile(auth.currentUser.uid);
         console.log('Profile data retrieved:', profile);
         
         if (profile) {
-          setUserProfile(profile);
+          // Update both local state and global cache
+          setLocalUserProfile(profile);
+          setUserProfile(auth.currentUser.uid, profile); // Cache in global state
           setBio(profile.bio || '');
         } else {
           console.warn('No profile found for current user');
@@ -105,11 +110,17 @@ const UserProfileModal: React.FC<UserProfileModalProps> = ({ onClose }) => {
   };
 
   const handleUpdateProfile = async () => {
-    if (!auth.currentUser || !userProfile) return;
+    if (!auth.currentUser || !localUserProfile) return;
 
     try {
+      // Update the profile in Firestore
       await updateUserProfile(auth.currentUser.uid, { bio });
-      setUserProfile(prev => prev ? { ...prev, bio } : null);
+      
+      // Update both local state and global cache
+      const updatedProfile = { ...localUserProfile, bio };
+      setLocalUserProfile(updatedProfile);
+      setUserProfile(auth.currentUser.uid, updatedProfile); // Update in global state
+      
       setEditMode(false);
     } catch (err) {
       console.error('Error updating profile:', err);
@@ -148,23 +159,23 @@ const UserProfileModal: React.FC<UserProfileModalProps> = ({ onClose }) => {
               </button>
             </div>
           </div>
-        ) : userProfile ? (
+        ) : localUserProfile ? (
         <>
           <div className="flex flex-col items-center p-6 space-y-4">
             <div className="relative">
-              {userProfile.photoURL ? (
-                <img src={userProfile.photoURL} alt={userProfile.username} className="w-24 h-24 rounded-full object-cover" />
+              {localUserProfile.photoURL ? (
+                <img src={localUserProfile.photoURL} alt={localUserProfile.username} className="w-24 h-24 rounded-full object-cover" />
               ) : (
                 <div className="w-24 h-24 rounded-full bg-med-green flex items-center justify-center text-white text-3xl">
-                  {userProfile.username.charAt(0).toUpperCase()}
+                  {localUserProfile.username.charAt(0).toUpperCase()}
                 </div>
               )}
               <button className="absolute bottom-0 right-0 bg-med-green text-white rounded-full p-1 hover:bg-dark-green">
                 <IoCamera size={18} />
               </button>
             </div>
-            <h3 className="text-xl font-semibold text-black dark:text-white">{userProfile.username}</h3>
-            <p className="text-gray-600 dark:text-white">{userProfile.email}</p>
+            <h3 className="text-xl font-semibold text-black dark:text-white">{localUserProfile.username}</h3>
+            <p className="text-gray-600 dark:text-white">{localUserProfile.email}</p>
           </div>
           
 
@@ -174,19 +185,19 @@ const UserProfileModal: React.FC<UserProfileModalProps> = ({ onClose }) => {
               <div className="bg-white dark:bg-zinc-700 rounded-lg p-4 shadow-sm">
                 <div className="mb-4">
                   <p className="text-sm text-gray-600 dark:text-white mb-1">Username</p>
-                  <p className="font-medium text-black dark:text-white">{userProfile.username}</p>
+                  <p className="font-medium text-black dark:text-white">{localUserProfile.username}</p>
                 </div>
                 <div className="mb-4">
                   <p className="text-sm text-gray-600 dark:text-white mb-1">Email</p>
-                  <p className="font-medium text-black dark:text-white">{userProfile.email}</p>
+                  <p className="font-medium text-black dark:text-white">{localUserProfile.email}</p>
                 </div>
-                {userProfile.createdAt && (
+                {localUserProfile.createdAt && (
                   <div>
                     <p className="text-sm text-gray-600 dark:text-white mb-1">Account Created</p>
                     <p className="font-medium text-black dark:text-white">
-                      {typeof userProfile.createdAt === 'object' && 'seconds' in userProfile.createdAt
-                        ? new Date((userProfile.createdAt as any).seconds * 1000).toLocaleDateString()
-                        : new Date(userProfile.createdAt as any).toLocaleDateString()}
+                      {typeof localUserProfile.createdAt === 'object' && 'seconds' in localUserProfile.createdAt
+                        ? new Date((localUserProfile.createdAt as any).seconds * 1000).toLocaleDateString()
+                        : new Date(localUserProfile.createdAt as any).toLocaleDateString()}
                     </p>
                   </div>
                 )}
@@ -208,7 +219,7 @@ const UserProfileModal: React.FC<UserProfileModalProps> = ({ onClose }) => {
                     <div className="flex justify-end mt-2 space-x-2">
                       <button
                         onClick={() => {
-                          setBio(userProfile.bio || '');
+                          setBio(localUserProfile.bio || '');
                           setEditMode(false);
                         }}
                         className="px-3 py-1 bg-gray-200 dark:bg-zinc-600 text-gray-800 dark:text-white rounded"
@@ -225,7 +236,7 @@ const UserProfileModal: React.FC<UserProfileModalProps> = ({ onClose }) => {
                   </div>
                 ) : (
                   <p className="text-gray-600 dark:text-white">
-                    {userProfile.bio || 'No bio provided yet.'}
+                    {localUserProfile.bio || 'No bio provided yet.'}
                   </p>
                 )}
               </div>

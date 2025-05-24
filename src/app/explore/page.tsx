@@ -4,6 +4,7 @@ import React, { useContext, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { AuthContext } from '../context/AuthProvider';
+import { useAppData } from '../context/AppDataProvider';
 import NavBar from '../components/NavBar';
 import { IoPerson } from 'react-icons/io5';
 import { IoSearch, IoCloseCircleOutline } from 'react-icons/io5';
@@ -49,6 +50,7 @@ const defaultChatRooms: Omit<ChatRoom, 'id' | 'createdAt' | 'activeUsers'>[] = [
 
 export default function ExplorePage() {
   const { authUser, setAuthUser, isInitializing } = useContext(AuthContext);
+  const { chatRooms, setChatRooms, isLoading: isDataLoading } = useAppData();
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -83,10 +85,20 @@ export default function ExplorePage() {
       return;
     }
     
-    // Subscribe to chat rooms
+    // First, check if we already have cached chat rooms in our global state
+    if (chatRooms.length > 0) {
+      console.log('Using cached chat rooms from global state');
+      setTopics(chatRooms);
+      setFilteredItems(chatRooms);
+      setIsLoading(false);
+    }
+    
+    // Subscribe to chat rooms even if we have cached data to ensure it stays fresh
     const unsubscribe = getChatRooms((rooms) => {
+      // Update both local state and global state
       setTopics(rooms);
       setFilteredItems(rooms);
+      setChatRooms(rooms); // Store in global AppDataProvider state
       
       // If no rooms exist, create default rooms
       if (rooms.length === 0) {
@@ -101,7 +113,7 @@ export default function ExplorePage() {
     return () => {
       unsubscribe();
     };
-  }, [authUser, router]);
+  }, [authUser, router, chatRooms.length, setChatRooms]);
   
   // Create default chat rooms
   const createDefaultRooms = async () => {

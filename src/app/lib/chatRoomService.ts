@@ -47,24 +47,93 @@ export interface RoomParticipant {
   lastActive: any;
 }
 
-// Get all chat rooms
+// Default chat rooms for fallback when Firestore is not available
+const defaultChatRoomsData = [
+  {
+    id: 'default-anime',
+    title: 'Anime',
+    description: 'Discuss your favorite anime series and characters',
+    category: 'Entertainment',
+    isDefault: true,
+    isPinned: true,
+    activeUsers: 0,
+    createdAt: { toDate: () => new Date() }
+  },
+  {
+    id: 'default-gaming',
+    title: 'Gaming',
+    description: 'Connect with fellow gamers and discuss the latest games',
+    category: 'Entertainment',
+    isDefault: true,
+    isPinned: true,
+    activeUsers: 0,
+    createdAt: { toDate: () => new Date() }
+  },
+  {
+    id: 'default-coding',
+    title: 'Coding',
+    description: 'Discuss programming languages, projects, and coding challenges',
+    category: 'Technology',
+    isDefault: true,
+    isPinned: false,
+    activeUsers: 0,
+    createdAt: { toDate: () => new Date() }
+  }
+];
+
+// Get all chat rooms with performance optimizations
 export const getChatRooms = (callback: (rooms: ChatRoom[]) => void) => {
   try {
     // Check if Firestore is available
     if (!db) {
-      console.warn('Firestore is not properly initialized. Using empty chat rooms list.');
-      callback([]);
+      console.warn('Firestore is not properly initialized. Using default chat rooms.');
+      callback(defaultChatRoomsData as ChatRoom[]);
       return () => {}; // Return empty unsubscribe function
     }
     
-    console.log('Fetching chat rooms from Firestore...');
+    // First, check if we have cached rooms in localStorage
+    if (typeof window !== 'undefined') {
+      try {
+        const cachedRooms = localStorage.getItem('cachedChatRooms');
+        if (cachedRooms) {
+          const parsedRooms = JSON.parse(cachedRooms);
+          const cacheTimestamp = localStorage.getItem('chatRoomsCacheTimestamp');
+          
+          // If cache is less than 5 minutes old, use it immediately
+          if (cacheTimestamp && (Date.now() - parseInt(cacheTimestamp)) < 300000) {
+            console.log('Using cached chat rooms from localStorage');
+            callback(parsedRooms);
+          } else {
+            // Cache is old but still usable while we fetch fresh data
+            console.log('Using stale cached chat rooms while fetching fresh data');
+            callback(parsedRooms);
+          }
+        } else {
+          // No cache, use default rooms while waiting for Firestore
+          console.log('No cached rooms found, using defaults while fetching');
+          callback(defaultChatRoomsData as ChatRoom[]);
+        }
+      } catch (e) {
+        console.warn('Error reading cached chat rooms:', e);
+        callback(defaultChatRoomsData as ChatRoom[]);
+      }
+    }
+    
+    console.log('Fetching fresh chat rooms from Firestore...');
     const roomsRef = collection(db, 'chatRooms');
     
-    // Set up error handling for the snapshot listener
+    // Set up error handling for the snapshot listener with timeout
+    const timeoutId = setTimeout(() => {
+      console.warn('Firestore fetch timed out, using default or cached rooms');
+      // We've already called the callback with cached/default data, so no need to call again
+    }, 10000); // 10 second timeout
+    
     const unsubscribe = onSnapshot(
       roomsRef, 
       (snapshot) => {
+        clearTimeout(timeoutId); // Clear the timeout since we got a response
         console.log(`Received ${snapshot.docs.length} chat rooms from Firestore`);
+        
         // Filter out deleted rooms
         const rooms = snapshot.docs
           .filter(doc => !doc.data().deleted) // Skip deleted rooms
@@ -85,22 +154,40 @@ export const getChatRooms = (callback: (rooms: ChatRoom[]) => void) => {
           return dateB.getTime() - dateA.getTime();
         });
         
+        // Cache the rooms in localStorage for faster future access
+        if (typeof window !== 'undefined' && rooms.length > 0) {
+          try {
+            // Prepare rooms for caching by converting timestamps
+            const roomsForCache = rooms.map(room => ({
+              ...room,
+              createdAt: room.createdAt?.toDate?.() ? 
+                room.createdAt.toDate().toISOString() : new Date().toISOString()
+            }));
+            
+            localStorage.setItem('cachedChatRooms', JSON.stringify(roomsForCache));
+            localStorage.setItem('chatRoomsCacheTimestamp', Date.now().toString());
+            console.log('Chat rooms cached successfully');
+          } catch (e) {
+            console.warn('Failed to cache chat rooms:', e);
+          }
+        }
+        
         callback(rooms);
       },
       (error) => {
+        clearTimeout(timeoutId); // Clear the timeout since we got an error response
         console.error('Error fetching chat rooms:', error);
-        // Return empty array on error to prevent UI from breaking
-        callback([]);
+        // We've already called the callback with cached/default data, so no need to call again
       }
     );
     
     return unsubscribe;
   } catch (error) {
     console.error('Exception in getChatRooms:', error);
-    callback([]);
+    callback(defaultChatRoomsData as ChatRoom[]);
     return () => {}; // Return empty unsubscribe function
   }
-};
+}
 
 // Get a single chat room
 export const getChatRoom = async (roomId: string): Promise<ChatRoom | null> => {
