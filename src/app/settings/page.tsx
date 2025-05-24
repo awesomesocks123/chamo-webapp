@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useContext, useState, useEffect } from 'react';
+import React, { useContext, useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { AuthContext } from '../context/AuthProvider';
 import NavBar from '../components/NavBar';
@@ -12,7 +12,8 @@ import TermsOfService from './components/TermsOfService';
 import ProfileMenu from './components/ProfileMenu';
 import FriendsList from '../components/FriendsList';
 
-export default function SettingsPage() {
+// Component that uses searchParams
+function SettingsContent() {
   const { authUser, setAuthUser } = useContext(AuthContext);
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -156,5 +157,34 @@ export default function SettingsPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+// Loading fallback for Suspense
+function SettingsPageLoading() {
+  return (
+    <div className="min-h-screen flex justify-center items-center bg-light-green dark:bg-[#191919]">
+      <p className="text-dark-green dark:text-white font-medium">Loading Settings...</p>
+    </div>
+  );
+}
+
+// Main component that wraps the content in Suspense
+export default function SettingsPage() {
+  const { authUser } = useContext(AuthContext);
+  const router = useRouter();
+  
+  useEffect(() => {
+    // Check if user is authenticated
+    if (!authUser) {
+      // Redirect to login if not authenticated
+      router.replace('/auth/login');
+    }
+  }, [authUser, router]);
+  
+  return (
+    <Suspense fallback={<SettingsPageLoading />}>
+      <SettingsContent />
+    </Suspense>
   );
 }
