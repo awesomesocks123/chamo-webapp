@@ -3,6 +3,20 @@
     "rules": "firestore.rules",
     "indexes": "firestore.indexes.json"
   },
+  "hosting": {
+    "public": "out",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "rewrites": [
+      {
+        "source": "**",
+        "destination": "/index.html"
+      }
+    ]
+  },
   "emulators": {
     "auth": {
       "port": 9099
@@ -10,10 +24,16 @@
     "firestore": {
       "port": 8082
     },
+    "hosting": {
+      "port": 5000
+    },
     "ui": {
       "enabled": true,
       "port": 4001
     },
     "singleProjectMode": true
+  },
+  "database": {
+    "rules": "database.rules.json"
   }
 }

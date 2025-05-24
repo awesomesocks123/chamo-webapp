@@ -1,12 +1,16 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Simple configuration for school project
+  // Configuration optimized for Vercel deployment
   images: {
-    unoptimized: true,
+    domains: ['lh3.googleusercontent.com'], // Allow Google profile images
   },
+  // Disable source maps in production for better performance
+  productionBrowserSourceMaps: false,
+  // Ignore ESLint errors during build (for school project)
   eslint: {
     ignoreDuringBuilds: true,
   },
+  // Ignore TypeScript errors during build (for school project)
   typescript: {
     ignoreBuildErrors: true,
   }
