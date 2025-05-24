@@ -23,34 +23,61 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   
   // Listen to Firebase authentication state changes
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (user) {
-        // User is signed in
-        setAuthUserState(user.uid);
-        localStorage.setItem('authUser', user.uid);
-        console.log('User authenticated:', user.uid);
+    let unsubscribe: () => void;
+
+    try {
+      // Check if auth object is properly initialized
+      if (auth && typeof auth.onAuthStateChanged === 'function') {
+        unsubscribe = onAuthStateChanged(auth, (user) => {
+          if (user) {
+            // User is signed in
+            setAuthUserState(user.uid);
+            localStorage.setItem('authUser', user.uid);
+            console.log('User authenticated:', user.uid);
+          } else {
+            // User is signed out
+            // Check localStorage as fallback
+            try {
+              const storedUser = localStorage.getItem('authUser');
+              if (storedUser) {
+                console.log('Using stored authentication from localStorage');
+                setAuthUserState(storedUser);
+              } else {
+                setAuthUserState(null);
+                localStorage.removeItem('authUser');
+              }
+            } catch (error) {
+              console.error('Error accessing localStorage:', error);
+              setAuthUserState(null);
+            }
+          }
+          setIsInitializing(false);
+        });
       } else {
-        // User is signed out
-        // Check localStorage as fallback
+        // Firebase auth not available, fallback to localStorage
+        console.warn('Firebase auth not available, using localStorage only');
         try {
           const storedUser = localStorage.getItem('authUser');
           if (storedUser) {
             console.log('Using stored authentication from localStorage');
             setAuthUserState(storedUser);
-          } else {
-            setAuthUserState(null);
-            localStorage.removeItem('authUser');
           }
         } catch (error) {
           console.error('Error accessing localStorage:', error);
-          setAuthUserState(null);
         }
+        setIsInitializing(false);
       }
+    } catch (error) {
+      console.error('Error setting up auth state listener:', error);
       setIsInitializing(false);
-    });
+    }
     
-    // Cleanup subscription
-    return () => unsubscribe();
+    // Cleanup subscription if it exists
+    return () => {
+      if (typeof unsubscribe === 'function') {
+        unsubscribe();
+      }
+    };
   }, []);
 
   // Custom setter that updates both state and localStorage
